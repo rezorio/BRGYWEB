@@ -68,7 +68,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin')
+  @Roles('Admin', 'Super Admin')
   @Post('revoke-all')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')

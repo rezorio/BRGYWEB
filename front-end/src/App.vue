@@ -1,11 +1,24 @@
-<script setup></script>
-
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div id="app" class="min-h-screen bg-gray-50">
+    <Navigation v-if="!isAuthPage" />
+    <main :class="{ 'pt-16': !isAuthPage }">
+      <router-view />
+    </main>
+    <ToastNotification />
+    <SessionWarning />
+  </div>
 </template>
 
-<style scoped></style>
+<script setup>
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import Navigation from "./components/layout/Navigation.vue";
+import ToastNotification from "./components/common/ToastNotification.vue";
+import SessionWarning from "./components/common/SessionWarning.vue";
+
+const route = useRoute();
+
+const isAuthPage = computed(() => {
+  return route.name === "login" || route.name === "register";
+});
+</script>

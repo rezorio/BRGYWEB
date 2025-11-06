@@ -41,13 +41,13 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
-    const roles = await this.roleRepository
-      .createQueryBuilder('role')
-      .where('role.name IN (:...roleNames)', { roleNames: registerDto.roleNames })
-      .getMany();
+    // Always assign default Citizen role, ignoring any role selection from client
+    const citizenRole = await this.roleRepository.findOne({
+      where: { name: 'Citizen' },
+    });
     
-    if (roles.length !== registerDto.roleNames.length) {
-      throw new NotFoundException('One or more roles not found');
+    if (!citizenRole) {
+      throw new NotFoundException('Citizen role not found');
     }
 
     const user = this.userRepository.create({
@@ -55,7 +55,7 @@ export class AuthService {
       password: hashedPassword,
       firstName: registerDto.firstName,
       lastName: registerDto.lastName,
-      roles,
+      roles: [citizenRole],
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -217,5 +217,14 @@ export class AuthService {
 
   private generateRandomToken(): string {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  }
+
+  async findAllUsers(): Promise<User[]> {
+    return await this.userRepository.find({
+      relations: ['roles'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 }
