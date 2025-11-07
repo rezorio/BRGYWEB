@@ -5,9 +5,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { ActivityLogsService } from './activity-logs.service';
+import { ActivityLogsController } from './activity-logs.controller';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { ActivityLog } from './entities/activity-log.entity';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
@@ -15,7 +18,7 @@ import { JwtModuleOptions } from '@nestjs/jwt';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, RefreshToken]),
+    TypeOrmModule.forFeature([User, Role, RefreshToken, ActivityLog]),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -28,9 +31,10 @@ import { JwtModuleOptions } from '@nestjs/jwt';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, ActivityLogsController],
   providers: [
     AuthService,
+    ActivityLogsService,
     LocalStrategy,
     JwtStrategy,
     JwtRefreshStrategy,

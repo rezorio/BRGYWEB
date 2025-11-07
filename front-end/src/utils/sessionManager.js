@@ -101,7 +101,6 @@ export class SessionManager {
         await this.refreshTokenIfNeeded();
       }
     } catch {
-      // eslint-disable-next-line no-console
       console.error("Session health check failed");
     }
   }

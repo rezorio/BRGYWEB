@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from '../auth/entities/user.entity';
 import { Role } from '../auth/entities/role.entity';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
+import { ActivityLog } from '../auth/entities/activity-log.entity';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { RefreshToken } from '../auth/entities/refresh-token.entity';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
-        entities: [User, Role, RefreshToken],
+        entities: [User, Role, RefreshToken, ActivityLog],
         synchronize: false,
         logging: configService.get<string>('NODE_ENV') === 'development',
       }),

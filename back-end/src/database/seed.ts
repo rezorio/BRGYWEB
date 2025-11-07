@@ -42,20 +42,23 @@ async function bootstrap() {
         relations: ['roles'],
       });
 
-      if (!existingAdmin) {
-        const hashedPassword = await bcrypt.hash('admin123', 10);
-        const admin = userRepository.create({
-          email: 'admin@example.com',
-          password: hashedPassword,
-          firstName: 'Admin',
-          lastName: 'User',
-          roles: [adminRole],
-        });
-        await userRepository.save(admin);
-        console.log('Created default admin user: admin@example.com / admin123');
-      } else {
-        console.log('Admin user already exists: admin@example.com');
+      if (existingAdmin) {
+        // Delete existing admin user to recreate with correct ID
+        await userRepository.delete({ email: 'admin@example.com' });
+        console.log('Deleted existing admin user');
       }
+
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      const admin = userRepository.create({
+        id: 'admin-user-id', // Specify the ID to match JWT expectations
+        email: 'admin@example.com',
+        password: hashedPassword,
+        firstName: 'Admin',
+        lastName: 'User',
+        roles: [adminRole],
+      });
+      await userRepository.save(admin);
+      console.log('Created default admin user: admin@example.com / admin123 with ID: admin-user-id');
     }
 
     console.log('Seed completed successfully!');

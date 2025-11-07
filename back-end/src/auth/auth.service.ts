@@ -14,6 +14,7 @@ import { Role } from './entities/role.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
@@ -225,6 +226,44 @@ export class AuthService {
       order: {
         createdAt: 'DESC',
       },
+    });
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<void> {
+    // Find user by ID first
+    const user = await this.userRepository.findOne({
+      where: { id: userId, isActive: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(
+      changePasswordDto.currentPassword,
+      user.password,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Check if new password is the same as current password
+    const isSamePassword = await bcrypt.compare(
+      changePasswordDto.newPassword,
+      user.password,
+    );
+
+    if (isSamePassword) {
+      throw new UnauthorizedException('New password must be different from current password');
+    }
+
+    // Hash and update the new password
+    const hashedNewPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+    
+    await this.userRepository.update(userId, {
+      password: hashedNewPassword,
     });
   }
 }

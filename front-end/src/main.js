@@ -23,7 +23,6 @@ const initializeApp = async () => {
 };
 
 initializeApp().catch((error) => {
-  // eslint-disable-next-line no-console
   console.error("Failed to initialize app:", error);
   app.mount("#app");
 });

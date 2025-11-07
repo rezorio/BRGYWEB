@@ -1,93 +1,182 @@
 import { ref, computed } from "vue";
 import { defineStore } from "pinia";
+import api from "@/services/api";
+import { useAuthStore } from "@/stores/auth";
 
 export const useActivityLogsStore = defineStore("activityLogs", () => {
   const logs = ref([]);
   const currentPage = ref(1);
   const logsPerPage = ref(5);
+  const totalLogs = ref(0);
+  const loading = ref(false);
+  const error = ref(null);
 
-  // Load logs from localStorage on store initialization
-  const loadLogs = () => {
+  // Fetch logs from API
+  const fetchLogs = async (page = 1, limit = 5) => {
     try {
-      const savedLogs = localStorage.getItem("activityLogs");
-      if (savedLogs) {
-        const parsedLogs = JSON.parse(savedLogs);
-        // Clean up logs older than 5 months
-        const fiveMonthsAgo = new Date();
-        fiveMonthsAgo.setMonth(fiveMonthsAgo.getMonth() - 5);
+      loading.value = true;
+      error.value = null;
 
-        logs.value = parsedLogs.filter((log) => {
-          const logDate = new Date(log.timestamp);
-          return logDate >= fiveMonthsAgo;
-        });
-
-        // Save cleaned logs back to localStorage
-        saveLogs();
+      // Check if user is authenticated
+      const authStore = useAuthStore();
+      if (!authStore.accessToken) {
+        console.warn("Cannot fetch activity logs: User not authenticated");
+        logs.value = [];
+        totalLogs.value = 0;
+        return;
       }
-    } catch (error) {
-      console.error("Error loading activity logs:", error);
-      logs.value = [];
+
+      const response = await api.get("/activity-logs", {
+        params: { page, limit },
+      });
+
+      logs.value = response.data.logs.map((log) => ({
+        ...log,
+        displayTimestamp: new Date(log.timestamp).toLocaleString(),
+      }));
+      totalLogs.value = response.data.total;
+      currentPage.value = page;
+    } catch (err) {
+      console.error("Error fetching activity logs:", err);
+      if (err.response?.status === 401) {
+        error.value = "Please login to view activity logs";
+        logs.value = [];
+        totalLogs.value = 0;
+      } else {
+        error.value =
+          err.response?.data?.message || "Failed to fetch activity logs";
+        logs.value = [];
+        totalLogs.value = 0;
+      }
+    } finally {
+      loading.value = false;
     }
   };
 
-  // Save logs to localStorage
-  const saveLogs = () => {
+  // Add a new activity log via API
+  const addLog = async (
+    title,
+    description,
+    type = "system",
+    changes = null,
+  ) => {
     try {
-      localStorage.setItem("activityLogs", JSON.stringify(logs.value));
-    } catch (error) {
-      console.error("Error saving activity logs:", error);
-    }
-  };
+      // Prevent logging routine access/viewing events
+      const restrictedEvents = [
+        "access",
+        "view",
+        "login",
+        "logout",
+        "signin",
+        "signout",
+        "opened",
+        "navigated",
+        "visited",
+        "displayed",
+        "loaded",
+      ];
 
-  // Add a new activity log
-  const addLog = (title, description, type = "system", changes = null) => {
-    const newLog = {
-      id: Date.now() + Math.random(), // Ensure unique ID
-      title,
-      description,
-      type,
-      changes, // Store before/after changes
-      timestamp: new Date().toISOString(),
-      displayTimestamp: new Date().toLocaleString(),
-      user: getCurrentUserInfo(),
-    };
+      const titleLower = title.toLowerCase();
+      const descriptionLower = description.toLowerCase();
 
-    logs.value.unshift(newLog);
-    saveLogs();
+      const isRestrictedEvent = restrictedEvents.some(
+        (event) =>
+          titleLower.includes(event) || descriptionLower.includes(event),
+      );
 
-    // Auto-cleanup old logs (keep only last 1000 logs for performance)
-    if (logs.value.length > 1000) {
-      logs.value = logs.value.slice(0, 1000);
-      saveLogs();
+      if (isRestrictedEvent) {
+        console.warn(
+          "Activity log blocked: Routine access/viewing events are not logged",
+        );
+        return;
+      }
+
+      const currentUserInfo = getCurrentUserInfo();
+
+      const logData = {
+        title,
+        description,
+        type,
+        changes,
+        ...currentUserInfo,
+      };
+
+      const response = await api.post("/activity-logs", logData);
+
+      // Add the new log to the beginning of the array
+      const newLog = {
+        ...response.data,
+        displayTimestamp: new Date(response.data.timestamp).toLocaleString(),
+      };
+
+      logs.value.unshift(newLog);
+      totalLogs.value += 1;
+    } catch (err) {
+      console.error("Error adding activity log:", err);
+      error.value = err.response?.data?.message || "Failed to add activity log";
     }
   };
 
   // Add a new activity log with user info provided directly
-  const addLogWithUserInfo = (
+  const addLogWithUserInfo = async (
     title,
     description,
     type = "system",
     changes = null,
     userInfo = null,
   ) => {
-    const newLog = {
-      id: Date.now() + Math.random(), // Ensure unique ID
-      title,
-      description,
-      type,
-      changes, // Store before/after changes
-      timestamp: new Date().toISOString(),
-      displayTimestamp: new Date().toLocaleString(),
-      user: userInfo || getCurrentUserInfo(),
-    };
+    try {
+      // Prevent logging routine access/viewing events
+      const restrictedEvents = [
+        "access",
+        "view",
+        "login",
+        "logout",
+        "signin",
+        "signout",
+        "opened",
+        "navigated",
+        "visited",
+        "displayed",
+        "loaded",
+      ];
 
-    logs.value.unshift(newLog);
-    saveLogs();
+      const titleLower = title.toLowerCase();
+      const descriptionLower = description.toLowerCase();
 
-    // Auto-cleanup old logs (keep only last 1000 logs for performance)
-    if (logs.value.length > 1000) {
-      logs.value = logs.value.slice(0, 1000);
-      saveLogs();
+      const isRestrictedEvent = restrictedEvents.some(
+        (event) =>
+          titleLower.includes(event) || descriptionLower.includes(event),
+      );
+
+      if (isRestrictedEvent) {
+        console.warn(
+          "Activity log blocked: Routine access/viewing events are not logged",
+        );
+        return;
+      }
+
+      const logData = {
+        title,
+        description,
+        type,
+        changes,
+        ...userInfo,
+      };
+
+      const response = await api.post("/activity-logs", logData);
+
+      // Add the new log to the beginning of the array
+      const newLog = {
+        ...response.data,
+        displayTimestamp: new Date(response.data.timestamp).toLocaleString(),
+      };
+
+      logs.value.unshift(newLog);
+      totalLogs.value += 1;
+    } catch (err) {
+      console.error("Error adding activity log:", err);
+      error.value = err.response?.data?.message || "Failed to add activity log";
     }
   };
 
@@ -96,14 +185,14 @@ export const useActivityLogsStore = defineStore("activityLogs", () => {
     try {
       // Try to get user info from current auth store in memory first
       const authStores = window.__pinia?.state?.value?.auth;
-      console.log(authStores);
       if (authStores?.user) {
         return {
-          email: authStores.user.email || "Unknown",
-          name:
+          userId: authStores.user.id || null,
+          userEmail: authStores.user.email || "Unknown",
+          userName:
             `${authStores.user.firstName || ""} ${authStores.user.lastName || ""}`.trim() ||
             "Unknown User",
-          role: authStores.user.roles?.[0] || "Unknown Role",
+          userRole: authStores.user.roles?.[0] || "Unknown Role",
         };
       }
 
@@ -113,9 +202,10 @@ export const useActivityLogsStore = defineStore("activityLogs", () => {
         try {
           const payload = JSON.parse(atob(accessToken.split(".")[1]));
           return {
-            email: payload.email || "Unknown",
-            name: "Current User", // We don't have name in JWT payload
-            role: payload.roles?.[0] || "Unknown Role",
+            userId: payload.sub || null,
+            userEmail: payload.email || "Unknown",
+            userName: "Current User", // We don't have name in JWT payload
+            userRole: payload.roles?.[0] || "Unknown Role",
           };
         } catch {
           // Token parsing failed
@@ -124,84 +214,138 @@ export const useActivityLogsStore = defineStore("activityLogs", () => {
 
       // Last fallback
       return {
-        email: "Unknown",
-        name: "Unknown User",
-        role: "Unknown Role",
+        userId: null,
+        userEmail: "Unknown",
+        userName: "Unknown User",
+        userRole: "Unknown Role",
       };
     } catch {
       return {
-        email: "Unknown",
-        name: "Unknown User",
-        role: "Unknown Role",
+        userId: null,
+        userEmail: "Unknown",
+        userName: "Unknown User",
+        userRole: "Unknown Role",
       };
     }
   };
 
   // Computed properties for pagination
   const totalPages = computed(() => {
-    return Math.ceil(logs.value.length / logsPerPage.value);
+    return Math.ceil(totalLogs.value / logsPerPage.value);
   });
 
   const paginatedLogs = computed(() => {
-    const start = (currentPage.value - 1) * logsPerPage.value;
-    const end = start + logsPerPage.value;
-    return logs.value.slice(start, end);
+    return logs.value;
   });
 
   // Pagination methods
-  const nextPage = () => {
+  const nextPage = async () => {
     if (currentPage.value < totalPages.value) {
-      currentPage.value++;
+      await fetchLogs(currentPage.value + 1, logsPerPage.value);
     }
   };
 
-  const prevPage = () => {
+  const prevPage = async () => {
     if (currentPage.value > 1) {
-      currentPage.value--;
+      await fetchLogs(currentPage.value - 1, logsPerPage.value);
     }
   };
 
-  const goToPage = (page) => {
+  const goToPage = async (page) => {
     if (page >= 1 && page <= totalPages.value) {
-      currentPage.value = page;
+      await fetchLogs(page, logsPerPage.value);
     }
   };
 
-  // Filter logs by type
-  const getLogsByType = (type) => {
-    return logs.value.filter((log) => log.type === type);
+  // Search logs via API
+  const searchLogs = async (query, page = 1) => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const response = await api.get("/activity-logs/search", {
+        params: { q: query, page, limit: logsPerPage.value },
+      });
+
+      logs.value = response.data.logs.map((log) => ({
+        ...log,
+        displayTimestamp: new Date(log.timestamp).toLocaleString(),
+      }));
+      totalLogs.value = response.data.total;
+      currentPage.value = page;
+    } catch (err) {
+      console.error("Error searching activity logs:", err);
+      error.value =
+        err.response?.data?.message || "Failed to search activity logs";
+      logs.value = [];
+      totalLogs.value = 0;
+    } finally {
+      loading.value = false;
+    }
   };
 
-  // Search logs
-  const searchLogs = (query) => {
-    if (!query) return logs.value;
+  // Filter logs by type via API
+  const getLogsByType = async (type, page = 1) => {
+    try {
+      loading.value = true;
+      error.value = null;
 
-    const searchTerm = query.toLowerCase();
-    return logs.value.filter(
-      (log) =>
-        log.title.toLowerCase().includes(searchTerm) ||
-        log.description.toLowerCase().includes(searchTerm) ||
-        log.user.name.toLowerCase().includes(searchTerm) ||
-        log.user.email.toLowerCase().includes(searchTerm),
-    );
+      const response = await api.get("/activity-logs/type", {
+        params: { type, page, limit: logsPerPage.value },
+      });
+
+      logs.value = response.data.logs.map((log) => ({
+        ...log,
+        displayTimestamp: new Date(log.timestamp).toLocaleString(),
+      }));
+      totalLogs.value = response.data.total;
+      currentPage.value = page;
+    } catch (err) {
+      console.error("Error filtering activity logs by type:", err);
+      error.value =
+        err.response?.data?.message || "Failed to filter activity logs";
+      logs.value = [];
+      totalLogs.value = 0;
+    } finally {
+      loading.value = false;
+    }
   };
 
-  // Clear all logs (admin function)
-  const clearAllLogs = () => {
-    logs.value = [];
-    saveLogs();
-    currentPage.value = 1;
+  // Clear all logs (admin function) via API
+  const clearAllLogs = async () => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      await api.delete("/activity-logs");
+
+      logs.value = [];
+      totalLogs.value = 0;
+      currentPage.value = 1;
+    } catch (err) {
+      console.error("Error clearing activity logs:", err);
+      error.value =
+        err.response?.data?.message || "Failed to clear activity logs";
+    } finally {
+      loading.value = false;
+    }
   };
 
-  // Initialize logs on store creation
-  loadLogs();
+  // Initialize logs on store creation (only if authenticated)
+  const authStore = useAuthStore();
+  if (authStore.accessToken) {
+    fetchLogs();
+  }
 
   return {
     logs,
     currentPage,
     logsPerPage,
+    totalLogs,
     totalPages,
     paginatedLogs,
+    loading,
+    error,
     addLog,
     addLogWithUserInfo,
     nextPage,
@@ -210,7 +354,6 @@ export const useActivityLogsStore = defineStore("activityLogs", () => {
     getLogsByType,
     searchLogs,
     clearAllLogs,
-    loadLogs,
-    saveLogs,
+    fetchLogs,
   };
 });

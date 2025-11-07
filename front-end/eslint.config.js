@@ -6,12 +6,12 @@ import configPrettier from "@vue/eslint-config-prettier";
 export default [
   {
     name: "app/files-to-lint",
-    files: ["**/*.{js,mjs,jsx,vue}"],
+    files: ["**/*.{js,mjs,jsx,ts,tsx,vue}"],
   },
 
   {
     name: "app/files-to-ignore",
-    ignores: ["**/dist/**", "**/dist-ssr/**", "**/coverage/**"],
+    ignores: ["**/dist/**", "**/dist-ssr/**", "**/coverage/**", "**/*.css"],
   },
 
   js.configs.recommended,
@@ -19,6 +19,7 @@ export default [
 
   {
     name: "app/vue-rules",
+    files: ["**/*.vue"],
     languageOptions: {
       parser: parserVue,
       ecmaVersion: "latest",
@@ -29,7 +30,7 @@ export default [
       "vue/multi-word-component-names": "off",
       "vue/no-v-html": "off",
 
-      // Allow Tailwind CSS directives
+      // Allow Tailwind CSS directives in Vue components
       "css/no-at-rules-from-deprecated-plugins": "off",
       "css/no-unknown-at-rules": "off",
 

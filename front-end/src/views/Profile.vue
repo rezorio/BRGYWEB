@@ -191,7 +191,7 @@
                     v-model="passwordForm.newPassword"
                     type="password"
                     class="form-input"
-                    placeholder="Enter new password"
+                    placeholder="Enter new password (min 6 chars, 1 special char)"
                   />
                 </div>
 
@@ -387,11 +387,24 @@ const handleChangePassword = async () => {
     return;
   }
 
+  // Check for special character
+  const specialCharRegex = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/;
+  if (!specialCharRegex.test(passwordForm.newPassword)) {
+    toastStore.showError(
+      "New password must include at least one special character",
+    );
+    return;
+  }
+
   try {
     passwordLoading.value = true;
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Call actual API endpoint
+    await authStore.changePassword({
+      currentPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword,
+      confirmNewPassword: passwordForm.confirmNewPassword,
+    });
 
     toastStore.showSuccess("Password changed successfully!");
 
@@ -399,8 +412,10 @@ const handleChangePassword = async () => {
     passwordForm.currentPassword = "";
     passwordForm.newPassword = "";
     passwordForm.confirmNewPassword = "";
-  } catch {
-    toastStore.showError("Failed to change password");
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message || "Failed to change password";
+    toastStore.showError(errorMessage);
   } finally {
     passwordLoading.value = false;
   }

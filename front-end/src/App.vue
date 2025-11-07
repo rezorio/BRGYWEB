@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-50">
-    <Navigation v-if="!isAuthPage" />
-    <main :class="{ 'pt-16': !isAuthPage }">
+    <Navigation v-if="!isAuthPage && !isHomePage" />
+    <main :class="{ 'pt-16': !isAuthPage && !isHomePage }">
       <router-view />
     </main>
     <ToastNotification />
@@ -20,5 +20,9 @@ const route = useRoute();
 
 const isAuthPage = computed(() => {
   return route.name === "login" || route.name === "register";
+});
+
+const isHomePage = computed(() => {
+  return route.name === "home";
 });
 </script>

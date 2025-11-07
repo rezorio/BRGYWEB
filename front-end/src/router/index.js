@@ -8,6 +8,30 @@ const router = createRouter({
       path: "/",
       name: "home",
       component: () => import("@/views/Home.vue"),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: "/about",
+      name: "about",
+      component: () => import("@/views/About.vue"),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: "/contact",
+      name: "contact",
+      component: () => import("@/views/Contact.vue"),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: "/services",
+      name: "services",
+      component: () => import("@/views/Services.vue"),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: "/request-document",
+      name: "request-document",
+      component: () => import("@/views/RequestDocument.vue"),
       meta: { requiresAuth: true },
     },
     {

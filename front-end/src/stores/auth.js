@@ -122,7 +122,6 @@ export const useAuthStore = defineStore("auth", () => {
 
         return true;
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error("Session initialization failed:", error);
         clearAuth();
         return false;
@@ -330,6 +329,22 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  // Change password
+  const changePassword = async (passwordData) => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const response = await api.post("/auth/change-password", passwordData);
+      return response.data;
+    } catch (err) {
+      error.value = err.response?.data?.message || "Failed to change password";
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   return {
     // State
     user,
@@ -358,5 +373,6 @@ export const useAuthStore = defineStore("auth", () => {
     initializeSession,
     extendSession,
     updateLastActivity,
+    changePassword,
   };
 });

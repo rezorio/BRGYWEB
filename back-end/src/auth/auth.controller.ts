@@ -14,6 +14,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { Roles } from './decorators/roles.decorator';
@@ -112,5 +113,21 @@ export class AuthController {
   @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   getAdminData() {
     return { message: 'This is an admin-only endpoint' };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Citizen', 'Admin', 'Super Admin')
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid current password' })
+  @ApiResponse({ status: 400, description: 'Bad Request - Invalid input data' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiBody({ type: ChangePasswordDto })
+  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {
+    await this.authService.changePassword(req.user.userId, changePasswordDto);
+    return { message: 'Password changed successfully' };
   }
 }

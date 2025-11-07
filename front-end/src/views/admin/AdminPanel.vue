@@ -337,7 +337,7 @@
             <h2 class="text-lg font-semibold text-gray-900">Activity Logs</h2>
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-500">
-                Total: {{ activityLogsStore.logs.length }} logs
+                Total: {{ activityLogsStore.totalLogs }} logs
               </span>
               <button
                 @click="activityLogsStore.clearAllLogs()"
@@ -403,9 +403,9 @@
 
                 <div class="flex items-center mt-2 text-xs text-gray-500">
                   <i class="fas fa-user mr-1"></i>
-                  <span>{{ log.user.firstName }} {{ log.user.lastName }} ({{ log.user.email }})</span>
+                  <span>{{ log.userName }} ({{ log.userEmail }})</span>
                   <span class="mx-2">•</span>
-                  <span class="capitalize">{{ log.user.role }}</span>
+                  <span class="capitalize">{{ log.userRole }}</span>
                 </div>
               </div>
             </div>
@@ -554,11 +554,6 @@ const fetchUsers = async () => {
   }
 };
 
-// Fetch users on component mount
-onMounted(() => {
-  fetchUsers();
-});
-
 const settings = reactive({
   allowRegistration: true,
   requireEmailVerification: false,
@@ -654,7 +649,7 @@ const currentPage = computed(() => activityLogsStore.currentPage);
 const totalPages = computed(() => activityLogsStore.totalPages);
 
 // Add activity log entry with change tracking
-const addActivityLog = (
+const addActivityLog = async (
   title,
   description,
   type = "system",
@@ -662,14 +657,15 @@ const addActivityLog = (
 ) => {
   // Get current user info from auth store
   const currentUserInfo = {
-    email: authStore.user?.email || "Unknown",
-    name:
+    userId: authStore.user?.id || null,
+    userEmail: authStore.user?.email || "Unknown",
+    userName:
       `${authStore.user?.firstName || ""} ${authStore.user?.lastName || ""}`.trim() ||
       "Unknown User",
-    role: authStore.userRole || "Unknown Role",
+    userRole: authStore.userRole || "Unknown Role",
   };
 
-  activityLogsStore.addLogWithUserInfo(
+  await activityLogsStore.addLogWithUserInfo(
     title,
     description,
     type,
@@ -688,12 +684,6 @@ const editUser = async (user) => {
 
   selectedUser.value = user;
   showEditUserModal.value = true;
-
-  addActivityLog(
-    "User Edit Initiated",
-    `${authStore.user?.firstName || "Admin"} opened edit form for ${user.role} user ${user.firstName} ${user.lastName}`,
-    "user",
-  );
 };
 
 const deleteUser = async (user) => {
@@ -723,7 +713,7 @@ const deleteUser = async (user) => {
     toastStore.showSuccess(
       `User ${user.firstName} ${user.lastName} deleted successfully`,
     );
-    addActivityLog(
+    await addActivityLog(
       "User Deleted",
       `${authStore.user?.firstName || "Super Admin"} deleted user ${user.firstName} ${user.lastName}`,
       "user",
@@ -743,7 +733,7 @@ const closeEditModal = () => {
   selectedUser.value = null;
 };
 
-const handleUserUpdated = (updatedUser) => {
+const handleUserUpdated = async (updatedUser) => {
   // Find the original user to track changes
   const originalUser = users.value.find((u) => u.id === updatedUser.id);
 
@@ -799,17 +789,19 @@ const handleUserUpdated = (updatedUser) => {
     changeDescription += `. Changes: ${changeDetails}`;
   }
 
-  addActivityLog("User Profile Updated", changeDescription, "user", changes);
+  await addActivityLog(
+    "User Profile Updated",
+    changeDescription,
+    "user",
+    changes,
+  );
 };
 
 onMounted(() => {
   fetchUsers();
-
-  // Log admin panel access
-  addActivityLog(
-    "Admin Panel Access",
-    `${authStore.user?.firstName || "User"} accessed the admin panel`,
-    "system",
-  );
+  // Fetch activity logs if user is authenticated
+  if (authStore.accessToken) {
+    activityLogsStore.fetchLogs();
+  }
 });
 </script>
