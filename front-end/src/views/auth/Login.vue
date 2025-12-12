@@ -92,9 +92,12 @@
           </div>
 
           <div class="text-sm">
-            <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+            <router-link
+              to="/forgot-password"
+              class="font-medium text-blue-600 hover:text-blue-500"
+            >
               Forgot your password?
-            </a>
+            </router-link>
           </div>
         </div>
 
@@ -129,19 +132,7 @@
       </form>
 
       <!-- Demo Account -->
-      <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 class="text-sm font-medium text-blue-800 mb-2">
-          <i class="fas fa-info-circle mr-1"></i>
-          Demo Account
-        </h3>
-        <p class="text-xs text-blue-700 mb-2">
-          Use these credentials to test the application:
-        </p>
-        <div class="text-xs text-blue-600 space-y-1">
-          <p><strong>Email:</strong> admin@example.com</p>
-          <p><strong>Password:</strong> admin123</p>
-        </div>
-      </div>
+      
     </div>
   </div>
 </template>
@@ -204,7 +195,13 @@ const handleLogin = async () => {
     });
 
     toastStore.showSuccess("Login successful!");
-    router.push("/dashboard");
+    
+    // Redirect based on user role
+    if (authStore.userRole === "Citizen") {
+      router.push("/"); // Redirect to landing page for citizens
+    } else {
+      router.push("/dashboard"); // Redirect to dashboard for admins
+    }
   } catch {
     // Error is handled by the store
   }

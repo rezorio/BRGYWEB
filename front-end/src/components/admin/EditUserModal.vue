@@ -19,37 +19,69 @@
       <!-- Modal Content -->
       <form @submit.prevent="handleSubmit">
         <!-- First Name -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            First Name
-          </label>
-          <input
-            v-model="form.firstName"
-            type="text"
-            required
-            class="form-input w-full"
-            :class="{ 'border-red-500': errors.firstName }"
-          />
-          <p v-if="errors.firstName" class="form-error">
-            {{ errors.firstName }}
-          </p>
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+            <input v-model="form.firstName" type="text" required class="form-input w-full" :class="{ 'border-red-500': errors.firstName }" />
+            <p v-if="errors.firstName" class="form-error">{{ errors.firstName }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Middle Name</label>
+            <input v-model="form.middleName" type="text" class="form-input w-full" />
+          </div>
         </div>
-
-        <!-- Last Name -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            Last Name
-          </label>
-          <input
-            v-model="form.lastName"
-            type="text"
-            required
-            class="form-input w-full"
-            :class="{ 'border-red-500': errors.lastName }"
-          />
-          <p v-if="errors.lastName" class="form-error">
-            {{ errors.lastName }}
-          </p>
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+            <input v-model="form.lastName" type="text" required class="form-input w-full" :class="{ 'border-red-500': errors.lastName }" />
+            <p v-if="errors.lastName" class="form-error">{{ errors.lastName }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Suffix</label>
+            <input v-model="form.suffix" type="text" class="form-input w-full" />
+          </div>
+        </div>
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+            <input v-model="form.dateOfBirth" type="date" class="form-input w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+            <select v-model="form.gender" class="form-input w-full">
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Civil Status</label>
+            <select v-model="form.civilStatus" class="form-input w-full">
+              <option value="">Select</option>
+              <option value="single">Single</option>
+              <option value="married">Married</option>
+              <option value="widowed">Widowed</option>
+              <option value="separated">Separated</option>
+              <option value="divorced">Divorced</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+            <input v-model="form.phoneNumber" type="text" class="form-input w-full" />
+          </div>
+        </div>
+        <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">House Number</label>
+            <input v-model="form.houseNumber" type="text" class="form-input w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Street</label>
+            <input v-model="form.street" type="text" class="form-input w-full" />
+          </div>
         </div>
 
         <!-- Email (Read-only) -->
@@ -191,8 +223,16 @@ const availableRoles = computed(() => {
 
 const form = reactive({
   firstName: "",
+  middleName: "",
   lastName: "",
+  suffix: "",
+  dateOfBirth: "",
+  gender: "",
+  civilStatus: "",
   email: "",
+  phoneNumber: "",
+  houseNumber: "",
+  street: "",
   role: "",
   status: "Active",
 });
@@ -209,8 +249,16 @@ watch(
   (newUser) => {
     if (newUser) {
       form.firstName = newUser.firstName || "";
+      form.middleName = newUser.middleName || "";
       form.lastName = newUser.lastName || "";
+      form.suffix = newUser.suffix || "";
+      form.dateOfBirth = newUser.dateOfBirth ? newUser.dateOfBirth.substring(0, 10) : "";
+      form.gender = newUser.gender || "";
+      form.civilStatus = newUser.civilStatus || "";
       form.email = newUser.email || "";
+      form.phoneNumber = newUser.phoneNumber || "";
+      form.houseNumber = newUser.houseNumber || "";
+      form.street = newUser.street || "";
       form.role = newUser.role || "Citizen";
       form.status = newUser.status || "Active";
     }
@@ -260,13 +308,28 @@ const handleSubmit = async () => {
   submitError.value = "";
 
   try {
-    // Make API call to update the user
-    const response = await api.put(`/users/${props.user.id}`, {
+    const updatePayload = {
       firstName: form.firstName.trim(),
+      middleName: form.middleName.trim(),
       lastName: form.lastName.trim(),
+      suffix: form.suffix.trim(),
+      dateOfBirth: form.dateOfBirth || null,
+      gender: form.gender,
+      civilStatus: form.civilStatus,
+      phoneNumber: form.phoneNumber,
+      houseNumber: form.houseNumber,
+      street: form.street,
       role: form.role,
       status: form.status,
-    });
+    };
+
+    console.log('[EditUserModal] Updating user:', props.user.id);
+    console.log('[EditUserModal] Update payload:', updatePayload);
+
+    // Make API call to update the user
+    const response = await api.put(`/users/${props.user.id}`, updatePayload);
+
+    console.log('[EditUserModal] Update response:', response.data);
 
     const updatedUser = response.data;
     toastStore.showSuccess(
@@ -275,6 +338,8 @@ const handleSubmit = async () => {
     emit("userUpdated", updatedUser);
     closeModal();
   } catch (error) {
+    console.error('[EditUserModal] Update error:', error);
+    console.error('[EditUserModal] Error response:', error.response?.data);
     submitError.value =
       error.response?.data?.message ||
       "Failed to update user. Please try again.";

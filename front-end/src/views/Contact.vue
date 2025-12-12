@@ -1,107 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-    <!-- Navigation Bar -->
-    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <!-- Logo -->
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div
-                class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"
-              >
-                <i class="fas fa-building text-white text-sm"></i>
-              </div>
-            </div>
-            <span class="ml-3 text-xl font-semibold text-gray-900"
-              >Barangay Bagong Barrio</span
-            >
-          </div>
-
-          <!-- Desktop Navigation Links -->
-          <div class="hidden md:flex items-center space-x-8">
-            <router-link
-              to="/"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              Home
-            </router-link>
-            <router-link
-              to="/about"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              About
-            </router-link>
-            <router-link
-              to="/contact"
-              class="text-blue-600 px-3 py-2 text-sm font-medium"
-            >
-              Contact Us
-            </router-link>
-            <router-link
-              to="/services"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              Services
-            </router-link>
-            <router-link
-              to="/request-document"
-              class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            >
-              <i class="fas fa-file-alt mr-2"></i>
-              Request a Document
-            </router-link>
-          </div>
-
-          <!-- Authentication Section -->
-          <div class="hidden md:flex items-center space-x-4">
-            <div
-              v-if="authStore.isAuthenticated"
-              class="flex items-center space-x-3"
-            >
-              <div
-                class="flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-lg"
-              >
-                <div
-                  class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center"
-                >
-                  <i class="fas fa-user text-blue-600 text-xs"></i>
-                </div>
-                <span class="text-sm font-medium text-gray-900">
-                  {{ authStore.user?.firstName }} {{ authStore.user?.lastName }}
-                </span>
-              </div>
-              <router-link
-                to="/dashboard"
-                class="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-              >
-                Dashboard
-              </router-link>
-            </div>
-
-            <div v-else>
-              <router-link
-                to="/login"
-                class="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
-              >
-                <i class="fas fa-sign-in-alt mr-2"></i>
-                Log In
-              </router-link>
-            </div>
-          </div>
-
-          <!-- Mobile menu button -->
-          <div class="md:hidden flex items-center space-x-2">
-            <button
-              @click="toggleMobileMenu"
-              class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-            >
-              <i class="fas fa-bars text-xl"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
+  <PublicLayout>
 
     <!-- Contact Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -295,15 +193,12 @@
         </div>
       </div>
     </div>
-  </div>
+  </PublicLayout>
 </template>
 
 <script setup>
 import { ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
-
-const authStore = useAuthStore();
-const showMobileMenu = ref(false);
+import PublicLayout from "@/layouts/PublicLayout.vue";
 
 const form = ref({
   name: "",
@@ -312,10 +207,6 @@ const form = ref({
   subject: "",
   message: "",
 });
-
-const toggleMobileMenu = () => {
-  showMobileMenu.value = !showMobileMenu.value;
-};
 
 const submitForm = () => {
   // Handle form submission

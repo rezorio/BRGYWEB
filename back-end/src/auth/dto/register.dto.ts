@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, ArrayNotEmpty } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, ArrayNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -51,4 +51,55 @@ export class RegisterDto {
   @IsString({ each: true })
   @ArrayNotEmpty()
   roleNames: string[];
+
+  // Optional profile fields
+  @ApiPropertyOptional({ description: 'Middle name' })
+  @IsOptional()
+  @IsString()
+  middleName?: string;
+
+  @ApiPropertyOptional({ description: 'Name suffix (Jr., Sr., III, etc.)' })
+  @IsOptional()
+  @IsString()
+  suffix?: string;
+
+  @ApiPropertyOptional({ description: 'Phone number' })
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @ApiPropertyOptional({ description: 'House number' })
+  @IsOptional()
+  @IsString()
+  houseNumber?: string;
+
+  @ApiPropertyOptional({ description: 'Street address' })
+  @IsOptional()
+  @IsString()
+  street?: string;
+
+  @ApiPropertyOptional({ description: 'Barangay' })
+  @IsOptional()
+  @IsString()
+  barangay?: string;
+
+  @ApiPropertyOptional({ description: 'City/Municipality' })
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @ApiPropertyOptional({ description: 'Province' })
+  @IsOptional()
+  @IsString()
+  province?: string;
+
+  @ApiPropertyOptional({ description: 'Region' })
+  @IsOptional()
+  @IsString()
+  region?: string;
+
+  @ApiPropertyOptional({ description: 'Zip code' })
+  @IsOptional()
+  @IsString()
+  zipCode?: string;
 }

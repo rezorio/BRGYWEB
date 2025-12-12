@@ -143,14 +143,20 @@ export class ActivityLogsController {
   }
 
   @Delete()
-  @Roles('Super Admin')
+  @Roles('Admin', 'Super Admin')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Clear all activity logs (Super Admin only)' })
+  @ApiOperation({ summary: 'Clear all activity logs (Admin only)' })
   @ApiResponse({ status: 200, description: 'All activity logs cleared successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Super Admin access required' })
-  async clearAllLogs() {
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
+  async clearAllLogs(@Request() req) {
+    console.log('Clearing all activity logs - User:', {
+      userId: req.user.userId,
+      email: req.user.email,
+      roles: req.user.roles
+    });
+    
     await this.activityLogsService.clearAllLogs();
     return { message: 'All activity logs cleared successfully' };
   }

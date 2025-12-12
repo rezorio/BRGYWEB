@@ -25,7 +25,7 @@
     <!-- Header -->
     <div class="bg-white shadow">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 class="text-2xl font-bold text-gray-900">Admin Panel</h1>
             <p class="mt-1 text-sm text-gray-600">
@@ -46,28 +46,6 @@
             Back to Dashboard
           </router-link>
         </div>
-      </div>
-    </div>
-
-    <!-- Admin Navigation Tabs -->
-    <div class="bg-white border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav class="flex space-x-8">
-          <button
-            v-for="tab in tabs"
-            :key="tab.key"
-            @click="activeTab = tab.key"
-            :class="[
-              'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
-              activeTab === tab.key
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-            ]"
-          >
-            <i :class="tab.icon" class="mr-2"></i>
-            {{ tab.label }}
-          </button>
-        </nav>
       </div>
     </div>
 
@@ -127,8 +105,8 @@
             </select>
           </div>
 
-          <!-- Users Table -->
-          <div class="overflow-x-auto">
+          <!-- Users Table (Desktop) -->
+          <div class="hidden lg:block overflow-x-auto">
             <div v-if="loading" class="text-center py-8">
               <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
               <p class="mt-2 text-sm text-gray-600">Loading users...</p>
@@ -164,7 +142,7 @@
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="user in filteredUsers" :key="user.id">
+                <tr v-for="user in paginatedUsers" :key="user.id">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="flex-shrink-0 h-10 w-10">
@@ -217,6 +195,13 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
+                      @click="viewUser(user)"
+                      class="text-green-600 hover:text-green-900 mr-3"
+                      title="View Profile"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button
                       v-if="canEditSpecificUser(user)"
                       @click="editUser(user)"
                       class="text-blue-600 hover:text-blue-900 mr-3"
@@ -244,103 +229,202 @@
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
 
-      <!-- System Settings Tab -->
-      <div v-if="activeTab === 'settings'" class="space-y-6">
-        <div class="card">
-          <h2 class="text-lg font-semibold text-gray-900 mb-6">
-            System Settings
-          </h2>
-          <div class="space-y-6">
-            <!-- Registration Settings -->
-            <div>
-              <h3 class="text-md font-medium text-gray-900 mb-4">
-                Registration Settings
-              </h3>
-              <div class="space-y-4">
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    v-model="settings.allowRegistration"
-                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span class="ml-2 text-sm text-gray-700"
-                    >Allow new user registration</span
-                  >
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    v-model="settings.requireEmailVerification"
-                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span class="ml-2 text-sm text-gray-700"
-                    >Require email verification</span
-                  >
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    v-model="settings.autoApproveUsers"
-                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span class="ml-2 text-sm text-gray-700"
-                    >Auto-approve new users</span
-                  >
-                </label>
-              </div>
-            </div>
-
-            <!-- Security Settings -->
-            <div>
-              <h3 class="text-md font-medium text-gray-900 mb-4">
-                Security Settings
-              </h3>
-              <div class="space-y-4">
-                <div>
-                  <label class="form-label">Session Timeout (minutes)</label>
-                  <input
-                    type="number"
-                    v-model="settings.sessionTimeout"
-                    class="form-input max-w-xs"
-                  />
+          <!-- Users List (Mobile) -->
+          <div class="lg:hidden divide-y divide-gray-200">
+            <div
+              v-for="user in paginatedUsers"
+              :key="user.id"
+              class="flex items-center justify-between p-4"
+            >
+              <div class="mr-3 flex-1 min-w-0">
+                <div class="text-sm font-medium text-gray-900 truncate">
+                  {{ user.firstName }} {{ user.lastName }}
                 </div>
-                <label class="flex items-center">
-                  <input
-                    type="checkbox"
-                    v-model="settings.requireTwoFactor"
-                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span class="ml-2 text-sm text-gray-700"
-                    >Require two-factor authentication</span
+                <div class="text-xs text-gray-500 truncate">
+                  {{ user.email }}
+                </div>
+              </div>
+              <div class="relative flex-shrink-0">
+                <button
+                  @click="toggleUserActions(user.id)"
+                  class="p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
+                >
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div
+                  v-if="mobileActionsUserId === user.id"
+                  class="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10"
+                >
+                  <button
+                    @click="viewUser(user); mobileActionsUserId = null;"
+                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                </label>
+                    View
+                  </button>
+                  <button
+                    v-if="canEditSpecificUser(user)"
+                    @click="editUser(user); mobileActionsUserId = null;"
+                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    v-if="canDeleteUsers"
+                    @click="deleteUser(user); mobileActionsUserId = null;"
+                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div class="pt-4">
-              <button @click="saveSettings" class="btn-primary">
-                <i class="fas fa-save mr-2"></i>
-                Save Settings
+          <!-- Pagination -->
+          <div v-if="usersTotalPages > 1" class="mt-6 px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-white rounded-b-lg">
+            <div class="flex-1 flex justify-between sm:hidden">
+              <button
+                @click="usersCurrentPage--"
+                :disabled="usersCurrentPage === 1"
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
               </button>
+              <button
+                @click="usersCurrentPage++"
+                :disabled="usersCurrentPage === usersTotalPages"
+                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm text-gray-700">
+                  Showing
+                  <span class="font-medium">{{ (usersCurrentPage - 1) * usersItemsPerPage + 1 }}</span>
+                  to
+                  <span class="font-medium">{{ Math.min(usersCurrentPage * usersItemsPerPage, filteredUsers.length) }}</span>
+                  of
+                  <span class="font-medium">{{ filteredUsers.length }}</span>
+                  results
+                </p>
+              </div>
+              <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <button
+                    @click="usersCurrentPage--"
+                    :disabled="usersCurrentPage === 1"
+                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <i class="fas fa-chevron-left"></i>
+                  </button>
+                  <button
+                    v-for="page in usersDisplayedPages"
+                    :key="page"
+                    @click="usersCurrentPage = page"
+                    :class="[
+                      'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                      page === usersCurrentPage
+                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    ]"
+                  >
+                    {{ page }}
+                  </button>
+                  <button
+                    @click="usersCurrentPage++"
+                    :disabled="usersCurrentPage === usersTotalPages"
+                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <i class="fas fa-chevron-right"></i>
+                  </button>
+                </nav>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Announcements Tab -->
+      <div v-if="activeTab === 'announcements'">
+        <AnnouncementsManagement @announcement-changed="handleAnnouncementChanged" />
+      </div>
+
+      <!-- Document Requests Tab -->
+      <div v-if="activeTab === 'documents'">
+        <DocumentRequestsTab />
+      </div>
+
+      <!-- Document Templates Tab -->
+      <div v-if="activeTab === 'documentTemplates'">
+        <DocumentTemplatesTab />
+      </div>
+
+      <!-- User Requests Tab -->
+      <div v-if="activeTab === 'userRequests'">
+        <UserRequestsTab />
+      </div>
+
       <!-- Activity Logs Tab -->
-      <div v-if="activeTab === 'logs'" class="space-y-6">
+      <div v-if="activeTab === 'logs'" class="space-y-4 sm:space-y-6">
         <div class="card">
-          <div class="flex items-center justify-between mb-6">
+          <!-- Mobile Header -->
+          <div class="block lg:hidden mb-4">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-semibold text-gray-900">Activity Logs</h2>
+            </div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-sm text-gray-600 font-medium">
+                Total: {{ activityLogsStore.totalLogs }} logs
+              </span>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                @click="activityLogsStore.fetchLogs()"
+                :disabled="activityLogsStore.loading"
+                class="btn-outline py-3 text-base font-medium"
+                title="Refresh activity logs"
+              >
+                <i 
+                  :class="activityLogsStore.loading ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'"
+                  class="mr-2"
+                ></i>
+                Refresh
+              </button>
+              <button
+                @click="showClearLogsConfirmation = true"
+                class="btn-outline py-3 text-base font-medium"
+                title="Clear all logs (Admin only)"
+              >
+                <i class="fas fa-trash mr-2"></i>
+                Clear All
+              </button>
+            </div>
+          </div>
+
+          <!-- Desktop Header -->
+          <div class="hidden lg:flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-900">Activity Logs</h2>
             <div class="flex items-center space-x-4">
               <span class="text-sm text-gray-500">
                 Total: {{ activityLogsStore.totalLogs }} logs
               </span>
               <button
-                @click="activityLogsStore.clearAllLogs()"
+                @click="activityLogsStore.fetchLogs()"
+                :disabled="activityLogsStore.loading"
+                class="btn-outline text-sm"
+                title="Refresh activity logs"
+              >
+                <i 
+                  :class="activityLogsStore.loading ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'"
+                  class="mr-2"
+                ></i>
+                Refresh
+              </button>
+              <button
+                @click="showClearLogsConfirmation = true"
                 class="btn-outline text-sm"
                 title="Clear all logs (Admin only)"
               >
@@ -351,101 +435,111 @@
           </div>
 
           <!-- Logs List -->
-          <div class="space-y-4 mb-6">
+          <div class="space-y-3 sm:space-y-4 mb-6">
             <div
               v-for="log in activityLogs"
               :key="log.id"
-              class="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex items-start space-x-3 sm:space-x-4 p-4 sm:p-5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div class="flex-shrink-0">
-                <div :class="getLogIconClass(log.type)" class="rounded-lg p-2">
-                  <i :class="getLogIcon(log.type)" class="text-sm"></i>
+                <div :class="getLogIconClass(log.type)" class="rounded-lg p-2 sm:p-2.5">
+                  <i :class="getLogIcon(log.type)" class="text-base sm:text-sm"></i>
                 </div>
               </div>
               <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-medium text-gray-900">
-                    {{ log.title }}
-                  </h3>
-                  <span class="text-xs text-gray-500">
-                    {{ log.displayTimestamp }}
-                  </span>
-                </div>
-                <p class="text-sm text-gray-600 mt-1">
-                  {{ log.description }}
-                </p>
-
-                <!-- Show detailed changes if available -->
-                <div
-                  v-if="log.changes && Object.keys(log.changes).length > 0"
-                  class="mt-2"
-                >
-                  <div class="bg-blue-50 border border-blue-200 rounded p-2">
-                    <p class="text-xs font-medium text-blue-800 mb-1">
-                      Changes Made:
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1">
+                    <h3 class="text-base sm:text-sm font-medium text-gray-900 leading-snug">
+                      {{ log.title }}
+                    </h3>
+                    <p class="text-sm sm:text-sm text-gray-600 mt-2 leading-relaxed">
+                      {{ log.description }}
                     </p>
-                    <div class="space-y-1">
-                      <div
-                        v-for="[field, change] in Object.entries(log.changes)"
-                        :key="field"
-                        class="text-xs text-blue-700"
-                      >
-                        <span class="font-medium"
-                          >{{ getFieldDisplayName(field) }}:</span
-                        >
-                        <span class="text-red-600">"{{ change.from }}"</span>
-                        →
-                        <span class="text-green-600">"{{ change.to }}"</span>
+                    
+                    <!-- Summary of changes -->
+                    <div
+                      v-if="log.changes && Object.keys(log.changes).length > 0"
+                      class="mt-3 flex items-center gap-2 text-sm sm:text-xs text-gray-500"
+                    >
+                      <i class="fas fa-edit"></i>
+                      <span>{{ Object.keys(log.changes).length }} field(s) modified</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center mt-3 text-sm sm:text-xs text-gray-500 gap-x-2 gap-y-1">
+                      <div class="flex items-center">
+                        <i class="fas fa-user mr-1"></i>
+                        <span>{{ log.userName }}</span>
                       </div>
+                      <span class="hidden sm:inline">•</span>
+                      <span class="capitalize">{{ log.userRole }}</span>
+                      <span class="hidden sm:inline">•</span>
+                      <span class="w-full sm:w-auto text-xs text-gray-400 mt-1 sm:mt-0">{{ log.displayTimestamp }}</span>
                     </div>
                   </div>
-                </div>
-
-                <div class="flex items-center mt-2 text-xs text-gray-500">
-                  <i class="fas fa-user mr-1"></i>
-                  <span>{{ log.userName }} ({{ log.userEmail }})</span>
-                  <span class="mx-2">•</span>
-                  <span class="capitalize">{{ log.userRole }}</span>
+                  
+                  <!-- View Details Button (Desktop) -->
+                  <div class="hidden lg:block">
+                    <button
+                      @click="viewLogDetails(log)"
+                      class="btn-outline text-xs px-3 py-1.5 whitespace-nowrap"
+                      title="View full details"
+                    >
+                      <i class="fas fa-eye mr-1"></i>
+                      Details
+                    </button>
+                  </div>
+                  
+                  <!-- View Details Button (Mobile) -->
+                  <div class="lg:hidden flex-shrink-0">
+                    <button
+                      @click="viewLogDetails(log)"
+                      class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50"
+                      title="View full details"
+                    >
+                      <i class="fas fa-chevron-right text-lg"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Empty state -->
-            <div v-if="activityLogs.length === 0" class="text-center py-8">
-              <i class="fas fa-list-alt text-gray-400 text-4xl mb-4"></i>
-              <p class="text-gray-500">No activity logs found</p>
+            <div v-if="activityLogs.length === 0" class="text-center py-12 sm:py-8">
+              <i class="fas fa-list-alt text-gray-400 text-5xl sm:text-4xl mb-4"></i>
+              <p class="text-base sm:text-sm text-gray-500">No activity logs found</p>
             </div>
           </div>
 
           <!-- Pagination -->
           <div
             v-if="totalPages > 1"
-            class="flex items-center justify-between border-t pt-4"
+            class="flex flex-col sm:flex-row items-center justify-between border-t pt-4 gap-3"
           >
-            <div class="text-sm text-gray-500">
+            <div class="text-sm sm:text-sm text-gray-600 font-medium">
               Page {{ currentPage }} of {{ totalPages }}
             </div>
             <div class="flex items-center space-x-2">
               <button
                 @click="activityLogsStore.prevPage()"
                 :disabled="currentPage === 1"
-                class="btn-outline text-sm"
+                class="btn-outline text-sm sm:text-sm px-4 py-2"
                 :class="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
               >
-                <i class="fas fa-chevron-left mr-1"></i>
-                Previous
+                <i class="fas fa-chevron-left mr-1 sm:mr-1"></i>
+                <span class="hidden sm:inline">Previous</span>
+                <span class="sm:hidden">Prev</span>
               </button>
 
               <!-- Page numbers -->
-              <div class="flex items-center space-x-1">
+              <div class="flex items-center space-x-1 sm:space-x-1">
                 <button
                   v-for="page in getVisiblePages()"
                   :key="page"
                   @click="activityLogsStore.goToPage(page)"
-                  class="px-3 py-1 text-sm rounded"
+                  class="px-3 py-2 text-sm rounded min-w-[40px]"
                   :class="
                     page === currentPage
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-blue-600 text-white font-medium'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   "
                 >
@@ -456,13 +550,13 @@
               <button
                 @click="activityLogsStore.nextPage()"
                 :disabled="currentPage === totalPages"
-                class="btn-outline text-sm"
+                class="btn-outline text-sm sm:text-sm px-4 py-2"
                 :class="{
                   'opacity-50 cursor-not-allowed': currentPage === totalPages,
                 }"
               >
                 Next
-                <i class="fas fa-chevron-right ml-1"></i>
+                <i class="fas fa-chevron-right ml-1 sm:ml-1"></i>
               </button>
             </div>
           </div>
@@ -471,6 +565,14 @@
     </div>
   </div>
 
+  <!-- View User Modal -->
+  <ViewUserModal
+    :is-visible="showViewUserModal"
+    :user="selectedUser"
+    @close="closeViewModal"
+    @edit="editUserFromView"
+  />
+
   <!-- Edit User Modal -->
   <EditUserModal
     :is-visible="showEditUserModal"
@@ -478,27 +580,100 @@
     @close="closeEditModal"
     @user-updated="handleUserUpdated"
   />
+
+  <!-- Activity Log Details Modal -->
+  <ActivityLogDetailsModal
+    :is-visible="showLogDetailsModal"
+    :log="selectedLog"
+    @close="closeLogDetailsModal"
+  />
+
+  <!-- Clear Logs Confirmation Modal -->
+  <ConfirmationModal
+    :is-visible="showClearLogsConfirmation"
+    title="Clear All Activity Logs"
+    message="Are you sure you want to clear all activity logs? This will permanently delete all log entries from the database."
+    warning-message="This action cannot be undone. All activity history will be lost forever."
+    confirm-text="Yes, Clear All Logs"
+    cancel-text="Cancel"
+    loading-text="Clearing..."
+    type="danger"
+    :loading="clearingLogs"
+    @confirm="handleClearAllLogs"
+    @cancel="showClearLogsConfirmation = false"
+    @close="showClearLogsConfirmation = false"
+  />
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
+import { useRoute } from "vue-router";
 import { useToastStore } from "@/stores/toast";
 import { useAuthStore } from "@/stores/auth";
 import { useActivityLogsStore } from "@/stores/activityLogs";
 import api from "@/services/api";
+import ViewUserModal from "@/components/admin/ViewUserModal.vue";
 import EditUserModal from "@/components/admin/EditUserModal.vue";
+import ActivityLogDetailsModal from "@/components/admin/ActivityLogDetailsModal.vue";
+import ConfirmationModal from "@/components/common/ConfirmationModal.vue";
+import AnnouncementsManagement from "@/views/admin/AnnouncementsManagement.vue";
+import DocumentRequestsTab from "@/components/admin/DocumentRequestsTab.vue";
+import DocumentTemplatesTab from "@/components/admin/DocumentTemplatesTab.vue";
+import UserRequestsTab from "@/components/admin/UserRequestsTab.vue";
 
 const toastStore = useToastStore();
 const authStore = useAuthStore();
 const activityLogsStore = useActivityLogsStore();
+const route = useRoute();
 
-const activeTab = ref("users");
+const validAdminTabs = [
+  "announcements",
+  "documents",
+  "documentTemplates",
+  "users",
+  "userRequests",
+  "logs",
+];
+const activeTab = ref("announcements");
+
+const syncActiveTabWithRoute = () => {
+  const tabParam = route.query.tab;
+  if (typeof tabParam === "string" && validAdminTabs.includes(tabParam)) {
+    activeTab.value = tabParam;
+  } else {
+    activeTab.value = "announcements";
+  }
+};
+
+syncActiveTabWithRoute();
+
+watch(
+  () => route.query.tab,
+  () => {
+    syncActiveTabWithRoute();
+  },
+);
+
+// Watch for tab changes and refresh activity logs when switching to logs tab
+watch(activeTab, (newTab) => {
+  if (newTab === "logs" && authStore.accessToken) {
+    activityLogsStore.fetchLogs();
+  }
+});
 const userSearch = ref("");
 const roleFilter = ref("");
 const showAddUserModal = ref(false);
+const showViewUserModal = ref(false);
 const showEditUserModal = ref(false);
 const selectedUser = ref(null);
+const showLogDetailsModal = ref(false);
+const selectedLog = ref(null);
 const loading = ref(false);
+const mobileActionsUserId = ref(null);
+const showClearLogsConfirmation = ref(false);
+const clearingLogs = ref(false);
+const usersCurrentPage = ref(1);
+const usersItemsPerPage = 5;
 
 // Role-based permissions
 const canDeleteUsers = computed(() => {
@@ -531,8 +706,9 @@ const canEditSpecificUser = (targetUser) => {
 };
 
 const tabs = [
+  { key: "announcements", label: "Announcements", icon: "fas fa-bullhorn" },
+  { key: "documents", label: "Document Requests", icon: "fas fa-file-alt" },
   { key: "users", label: "Users", icon: "fas fa-users" },
-  { key: "settings", label: "Settings", icon: "fas fa-cog" },
   { key: "logs", label: "Activity Logs", icon: "fas fa-list-alt" },
 ];
 
@@ -554,14 +730,6 @@ const fetchUsers = async () => {
   }
 };
 
-const settings = reactive({
-  allowRegistration: true,
-  requireEmailVerification: false,
-  autoApproveUsers: true,
-  sessionTimeout: 30,
-  requireTwoFactor: false,
-});
-
 const filteredUsers = computed(() => {
   return users.value.filter((user) => {
     const matchesSearch = `${user.firstName} ${user.lastName} ${user.email}`
@@ -570,6 +738,31 @@ const filteredUsers = computed(() => {
     const matchesRole = !roleFilter.value || user.role === roleFilter.value;
     return matchesSearch && matchesRole;
   });
+});
+
+const usersTotalPages = computed(() => Math.ceil(filteredUsers.value.length / usersItemsPerPage));
+
+const paginatedUsers = computed(() => {
+  const start = (usersCurrentPage.value - 1) * usersItemsPerPage;
+  const end = start + usersItemsPerPage;
+  return filteredUsers.value.slice(start, end);
+});
+
+const usersDisplayedPages = computed(() => {
+  const pages = [];
+  const maxPages = 5;
+  let startPage = Math.max(1, usersCurrentPage.value - Math.floor(maxPages / 2));
+  let endPage = Math.min(usersTotalPages.value, startPage + maxPages - 1);
+  
+  if (endPage - startPage < maxPages - 1) {
+    startPage = Math.max(1, endPage - maxPages + 1);
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+  
+  return pages;
 });
 
 const getRoleBadgeClass = (role) => {
@@ -597,18 +790,6 @@ const getLogIconClass = (type) => {
     system: "bg-purple-100",
   };
   return classes[type] || "bg-gray-100";
-};
-
-// Helper method for field display names
-const getFieldDisplayName = (field) => {
-  const fieldNames = {
-    firstName: "First Name",
-    lastName: "Last Name",
-    role: "Role",
-    status: "Status",
-    email: "Email",
-  };
-  return fieldNames[field] || field;
 };
 
 // Helper method for pagination
@@ -723,11 +904,39 @@ const deleteUser = async (user) => {
   }
 };
 
-const saveSettings = () => {
-  toastStore.showSuccess("Settings saved successfully!");
+const toggleUserActions = (id) => {
+  mobileActionsUserId.value =
+    mobileActionsUserId.value === id ? null : id;
 };
 
 // Modal event handlers
+const viewUser = (user) => {
+  selectedUser.value = user;
+  showViewUserModal.value = true;
+};
+
+const closeViewModal = () => {
+  showViewUserModal.value = false;
+  selectedUser.value = null;
+};
+
+const editUserFromView = (user) => {
+  // Close view modal and open edit modal
+  showViewUserModal.value = false;
+  showEditUserModal.value = true;
+  // selectedUser is already set
+};
+
+const viewLogDetails = (log) => {
+  selectedLog.value = log;
+  showLogDetailsModal.value = true;
+};
+
+const closeLogDetailsModal = () => {
+  showLogDetailsModal.value = false;
+  selectedLog.value = null;
+};
+
 const closeEditModal = () => {
   showEditUserModal.value = false;
   selectedUser.value = null;
@@ -737,27 +946,26 @@ const handleUserUpdated = async (updatedUser) => {
   // Find the original user to track changes
   const originalUser = users.value.find((u) => u.id === updatedUser.id);
 
-  // Track what changed
+  // Track ALL field changes
   const changes = {};
   if (originalUser) {
-    if (originalUser.firstName !== updatedUser.firstName) {
-      changes.firstName = {
-        from: originalUser.firstName,
-        to: updatedUser.firstName,
-      };
-    }
-    if (originalUser.lastName !== updatedUser.lastName) {
-      changes.lastName = {
-        from: originalUser.lastName,
-        to: updatedUser.lastName,
-      };
-    }
-    if (originalUser.role !== updatedUser.role) {
-      changes.role = { from: originalUser.role, to: updatedUser.role };
-    }
-    if (originalUser.status !== updatedUser.status) {
-      changes.status = { from: originalUser.status, to: updatedUser.status };
-    }
+    // List of all fields to track
+    const fieldsToTrack = [
+      'firstName', 'middleName', 'lastName', 'suffix',
+      'email', 'phoneNumber', 
+      'dateOfBirth', 'gender', 'civilStatus',
+      'houseNumber', 'street',
+      'role', 'status'
+    ];
+
+    fieldsToTrack.forEach(field => {
+      if (originalUser[field] !== updatedUser[field]) {
+        changes[field] = {
+          from: originalUser[field] || '',
+          to: updatedUser[field] || '',
+        };
+      }
+    });
   }
 
   // Update the user in the users array
@@ -766,28 +974,8 @@ const handleUserUpdated = async (updatedUser) => {
     users.value[index] = updatedUser;
   }
 
-  // Create detailed description of changes
-  let changeDescription = `${authStore.user?.firstName || "Admin"} updated profile for user ${updatedUser.firstName} ${updatedUser.lastName}`;
-
-  if (Object.keys(changes).length > 0) {
-    const changeDetails = Object.entries(changes)
-      .map(([field, change]) => {
-        const fieldName =
-          field === "firstName"
-            ? "First Name"
-            : field === "lastName"
-              ? "Last Name"
-              : field === "role"
-                ? "Role"
-                : field === "status"
-                  ? "Status"
-                  : field;
-        return `${fieldName}: "${change.from}" → "${change.to}"`;
-      })
-      .join(", ");
-
-    changeDescription += `. Changes: ${changeDetails}`;
-  }
+  // Create simple description without listing changes
+  const changeDescription = `${authStore.user?.firstName || "Admin"} updated profile for user ${updatedUser.firstName} ${updatedUser.lastName}`;
 
   await addActivityLog(
     "User Profile Updated",
@@ -795,6 +983,27 @@ const handleUserUpdated = async (updatedUser) => {
     "user",
     changes,
   );
+};
+
+// Handle announcement changes - refresh activity logs
+const handleAnnouncementChanged = () => {
+  if (authStore.accessToken) {
+    activityLogsStore.fetchLogs();
+  }
+};
+
+// Handle clear all logs with confirmation
+const handleClearAllLogs = async () => {
+  try {
+    clearingLogs.value = true;
+    await activityLogsStore.clearAllLogs();
+    showClearLogsConfirmation.value = false;
+    toastStore.showSuccess("All activity logs cleared successfully");
+  } catch (error) {
+    toastStore.showError("Failed to clear activity logs");
+  } finally {
+    clearingLogs.value = false;
+  }
 };
 
 onMounted(() => {

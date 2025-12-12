@@ -47,6 +47,24 @@ const router = createRouter({
       meta: { requiresGuest: true },
     },
     {
+      path: "/forgot-password",
+      name: "forgot-password",
+      component: () => import("@/views/auth/ForgotPassword.vue"),
+      meta: { requiresGuest: true },
+    },
+    {
+      path: "/verify-otp",
+      name: "verify-otp",
+      component: () => import("@/views/auth/VerifyOTP.vue"),
+      meta: { requiresGuest: true },
+    },
+    {
+      path: "/reset-password",
+      name: "reset-password",
+      component: () => import("@/views/auth/ResetPassword.vue"),
+      meta: { requiresGuest: true },
+    },
+    {
       path: "/dashboard",
       name: "dashboard",
       component: () => import("@/views/Dashboard.vue"),
@@ -62,6 +80,18 @@ const router = createRouter({
       path: "/admin",
       name: "admin",
       component: () => import("@/views/admin/AdminPanel.vue"),
+      meta: { requiresAuth: true, requiresRole: ["Admin", "Super Admin"] },
+    },
+    {
+      path: "/admin/announcements",
+      name: "admin-announcements",
+      component: () => import("@/views/admin/AnnouncementsManagement.vue"),
+      meta: { requiresAuth: true, requiresRole: ["Admin", "Super Admin"] },
+    },
+    {
+      path: "/admin/template-test",
+      name: "admin-template-test",
+      component: () => import("@/views/admin/TemplateTest.vue"),
       meta: { requiresAuth: true, requiresRole: ["Admin", "Super Admin"] },
     },
     {
@@ -89,16 +119,40 @@ router.beforeEach(async (to, from, next) => {
 
   // Check if route requires guest (not authenticated)
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next("/dashboard");
+    // Redirect based on user role
+    if (authStore.userRole === "Citizen") {
+      next("/");
+    } else {
+      next("/dashboard");
+    }
     return;
   }
 
   // Check if route requires specific role
   if (to.meta.requiresRole && authStore.isAuthenticated) {
-    const userRole = authStore.user?.roles?.[0]; // Assuming user has at least one role
-    if (!to.meta.requiresRole.includes(userRole)) {
-      next("/dashboard"); // Redirect to dashboard if insufficient permissions
+    const userRole = authStore.userRole;
+    
+    // If userRole is not loaded yet (page refresh), allow navigation and let it load
+    if (!userRole) {
+      next();
       return;
+    }
+    
+    // Check if user has the required role
+    if (!to.meta.requiresRole.includes(userRole)) {
+      // Prevent infinite redirect loop
+      const redirectPath = userRole === "Citizen" ? "/" : "/dashboard";
+      
+      // Don't redirect if already going to the redirect target
+      if (to.path !== redirectPath) {
+        // Show access denied message
+        import("@/stores/toast.js").then(({ useToastStore }) => {
+          useToastStore().showError("Access denied. You do not have permission to access this page.");
+        });
+        
+        next(redirectPath);
+        return;
+      }
     }
   }
 

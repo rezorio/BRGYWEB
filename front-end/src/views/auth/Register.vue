@@ -2,7 +2,7 @@
   <div
     class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
   >
-    <div class="max-w-md w-full space-y-8">
+    <div class="max-w-3xl w-full space-y-8">
       <!-- Header -->
       <div class="text-center">
         <div
@@ -26,46 +26,88 @@
 
       <!-- Registration Form -->
       <form class="mt-8 space-y-6" @submit.prevent="handleRegister">
+        <!-- Basic Information Section -->
         <div class="space-y-4">
-          <!-- First Name -->
-          <div>
-            <label for="firstName" class="form-label"> First Name </label>
-            <input
-              id="firstName"
-              v-model="form.firstName"
-              name="firstName"
-              type="text"
-              required
-              class="form-input"
-              :class="{ 'border-red-500': errors.firstName }"
-              placeholder="Enter your first name"
-            />
-            <p v-if="errors.firstName" class="form-error">
-              {{ errors.firstName }}
-            </p>
+          <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">
+            <i class="fas fa-user mr-2"></i>Basic Information
+          </h3>
+
+          <!-- Name Fields Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- First Name -->
+            <div>
+              <label for="firstName" class="form-label">First Name *</label>
+              <input
+                id="firstName"
+                v-model="form.firstName"
+                name="firstName"
+                type="text"
+                required
+                class="form-input"
+                :class="{ 'border-red-500': errors.firstName }"
+                placeholder="Juan"
+              />
+              <p v-if="errors.firstName" class="form-error">
+                {{ errors.firstName }}
+              </p>
+            </div>
+
+            <!-- Last Name -->
+            <div>
+              <label for="lastName" class="form-label">Last Name *</label>
+              <input
+                id="lastName"
+                v-model="form.lastName"
+                name="lastName"
+                type="text"
+                required
+                class="form-input"
+                :class="{ 'border-red-500': errors.lastName }"
+                placeholder="Dela Cruz"
+              />
+              <p v-if="errors.lastName" class="form-error">
+                {{ errors.lastName }}
+              </p>
+            </div>
           </div>
 
-          <!-- Last Name -->
-          <div>
-            <label for="lastName" class="form-label"> Last Name </label>
-            <input
-              id="lastName"
-              v-model="form.lastName"
-              name="lastName"
-              type="text"
-              required
-              class="form-input"
-              :class="{ 'border-red-500': errors.lastName }"
-              placeholder="Enter your last name"
-            />
-            <p v-if="errors.lastName" class="form-error">
-              {{ errors.lastName }}
-            </p>
+          <!-- Middle Name & Suffix Row -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+              <label for="middleName" class="form-label">Middle Name</label>
+              <input
+                id="middleName"
+                v-model="form.middleName"
+                name="middleName"
+                type="text"
+                class="form-input"
+                placeholder="Santos (Optional)"
+              />
+            </div>
+
+            <div>
+              <label for="suffix" class="form-label">Suffix</label>
+              <input
+                id="suffix"
+                v-model="form.suffix"
+                name="suffix"
+                type="text"
+                class="form-input"
+                placeholder="Jr., Sr., III"
+              />
+            </div>
           </div>
+        </div>
+
+        <!-- Contact Information Section -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">
+            <i class="fas fa-phone mr-2"></i>Contact Information
+          </h3>
 
           <!-- Email -->
           <div>
-            <label for="email" class="form-label"> Email address </label>
+            <label for="email" class="form-label">Email Address *</label>
             <input
               id="email"
               v-model="form.email"
@@ -75,14 +117,79 @@
               required
               class="form-input"
               :class="{ 'border-red-500': errors.email }"
-              placeholder="Enter your email"
+              placeholder="juan.delacruz@example.com"
             />
             <p v-if="errors.email" class="form-error">{{ errors.email }}</p>
           </div>
 
+          <!-- Phone Number -->
+          <div>
+            <label for="phoneNumber" class="form-label">Phone Number *</label>
+            <input
+              id="phoneNumber"
+              v-model="form.phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              required
+              class="form-input"
+              :class="{ 'border-red-500': errors.phoneNumber }"
+              placeholder="09XX XXX XXXX"
+            />
+            <p v-if="errors.phoneNumber" class="form-error">
+              {{ errors.phoneNumber }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Address Section -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">
+            <i class="fas fa-map-marker-alt mr-2"></i>Address
+          </h3>
+
+          <!-- House Number & Street -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="houseNumber" class="form-label">House No.</label>
+              <input
+                id="houseNumber"
+                v-model="form.houseNumber"
+                name="houseNumber"
+                type="text"
+                class="form-input"
+                placeholder="123"
+              />
+            </div>
+
+            <div class="md:col-span-2">
+              <label for="street" class="form-label">Street *</label>
+              <input
+                id="street"
+                v-model="form.street"
+                name="street"
+                type="text"
+                required
+                class="form-input"
+                :class="{ 'border-red-500': errors.street }"
+                placeholder="Rizal Street"
+              />
+              <p v-if="errors.street" class="form-error">
+                {{ errors.street }}
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Account Security Section -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">
+            <i class="fas fa-lock mr-2"></i>Account Security
+          </h3>
+
           <!-- Password -->
           <div>
-            <label for="password" class="form-label"> Password </label>
+            <label for="password" class="form-label">Password *</label>
             <div class="relative">
               <input
                 id="password"
@@ -116,7 +223,7 @@
           <!-- Confirm Password -->
           <div>
             <label for="confirmPassword" class="form-label">
-              Confirm Password
+              Confirm Password *
             </label>
             <div class="relative">
               <input
@@ -178,24 +285,7 @@
         </div>
       </form>
 
-      <!-- Role Information -->
-      <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 class="text-sm font-medium text-gray-800 mb-2">
-          <i class="fas fa-info-circle mr-1"></i>
-          Role Information
-        </h3>
-        <div class="text-xs text-gray-600 space-y-2">
-          <div><strong>Citizen:</strong> Basic access for regular citizens</div>
-          <div>
-            <strong>Admin:</strong> Administrative access for system
-            administrators
-          </div>
-          <div>
-            <strong>Super Admin:</strong> Full system access for super
-            administrators
-          </div>
-        </div>
-      </div>
+     
     </div>
   </div>
 </template>
@@ -205,15 +295,27 @@ import { ref, reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useToastStore } from "@/stores/toast";
+import api from "@/services/api";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const toastStore = useToastStore();
 
 const form = reactive({
+  // Basic Information
   firstName: "",
+  middleName: "",
   lastName: "",
+  suffix: "",
+  // Contact Information
   email: "",
+  phoneNumber: "",
+  // Address
+  houseNumber: "",
+  street: "",
+  barangay: "Bagong Barrio", // Default barangay
+  city: "Caloocan", // Default city
+  // Account Security
   password: "",
   confirmPassword: "",
 });
@@ -222,6 +324,8 @@ const errors = reactive({
   firstName: "",
   lastName: "",
   email: "",
+  phoneNumber: "",
+  street: "",
   password: "",
   confirmPassword: "",
 });
@@ -264,6 +368,21 @@ const validateForm = () => {
     isValid = false;
   }
 
+  // Phone Number validation
+  if (!form.phoneNumber) {
+    errors.phoneNumber = "Phone number is required";
+    isValid = false;
+  } else if (!/^(09|\+639)\d{9}$/.test(form.phoneNumber.replace(/\s/g, ''))) {
+    errors.phoneNumber = "Invalid Philippine phone number";
+    isValid = false;
+  }
+
+  // Street validation (required for profile completeness)
+  if (!form.street) {
+    errors.street = "Street is required";
+    isValid = false;
+  }
+
   // Password validation
   if (!form.password) {
     errors.password = "Password is required";
@@ -289,17 +408,45 @@ const handleRegister = async () => {
   if (!validateForm()) return;
 
   try {
-    await authStore.register({
+    const response = await api.post('/otp/registration/request', {
+      // Basic Information
       firstName: form.firstName,
+      middleName: form.middleName || null,
       lastName: form.lastName,
+      suffix: form.suffix || null,
+      // Contact Information
       email: form.email,
+      phoneNumber: form.phoneNumber,
+      // Address
+      houseNumber: form.houseNumber || null,
+      street: form.street,
+      barangay: "Bagong Barrio", // Always set to Bagong Barrio
+      city: "Caloocan", // Always set to Caloocan
+      province: null,
+      region: null,
+      zipCode: null,
+      // Account Security
       password: form.password,
     });
 
-    toastStore.showSuccess("Registration successful!");
-    router.push("/dashboard");
-  } catch {
-    // Error is handled by the store
+    toastStore.showSuccess(
+      "OTP sent to your phone! Please verify to complete registration."
+    );
+    
+    // Redirect to OTP verification page
+    router.push({
+      name: 'verify-otp',
+      query: {
+        otpId: response.data.otpId,
+        type: 'registration',
+        phone: form.phoneNumber,
+        expiresAt: response.data.expiresAt,
+      },
+    });
+  } catch (error) {
+    toastStore.showError(
+      error.response?.data?.message || 'Registration failed. Please try again.'
+    );
   }
 };
 

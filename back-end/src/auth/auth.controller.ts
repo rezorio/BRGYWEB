@@ -5,13 +5,18 @@ import {
   UseGuards,
   Request,
   Get,
+  Patch,
   HttpCode,
   HttpStatus,
+  Ip,
+  Headers,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LoginThrottleGuard } from './guards/login-throttle.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -25,25 +30,40 @@ import { RolesGuard } from './guards/roles.guard';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  // DEPRECATED: Direct registration disabled - use /user-requests/registration instead
+  // This endpoint is now admin-only for manual user creation
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Super Admin')
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 registrations per minute
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Register a new user (Admin only - for manual user creation)' })
   @ApiResponse({ status: 201, description: 'User successfully registered', type: AuthResponseDto })
   @ApiResponse({ status: 400, description: 'Bad Request - Invalid input data' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
   @ApiResponse({ status: 409, description: 'Conflict - User already exists' })
+  @ApiResponse({ status: 429, description: 'Too Many Requests - Rate limit exceeded' })
   @ApiBody({ type: RegisterDto })
   async register(@Body() registerDto: RegisterDto): Promise<AuthResponseDto> {
     return this.authService.register(registerDto);
   }
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(LoginThrottleGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 attempts per minute
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
   @ApiResponse({ status: 200, description: 'Login successful', type: AuthResponseDto })
   @ApiResponse({ status: 401, description: 'Unauthorized - Invalid credentials' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Account locked' })
+  @ApiResponse({ status: 429, description: 'Too Many Requests - Rate limit exceeded' })
   @ApiBody({ type: LoginDto })
-  async login(@Request() req, @Body() loginDto: LoginDto): Promise<AuthResponseDto> {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
+  ): Promise<AuthResponseDto> {
+    return this.authService.login(loginDto, ip, userAgent);
   }
 
   @Post('refresh')
@@ -87,8 +107,19 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Profile retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  getProfile(@Request() req) {
-    return req.user;
+  async getProfile(@Request() req) {
+    // Fetch complete user profile from database instead of just JWT payload
+    return await this.authService.getUserProfile(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updateProfile(@Request() req, @Body() updateData: any) {
+    return await this.authService.updateUserProfile(req.user.userId, updateData);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

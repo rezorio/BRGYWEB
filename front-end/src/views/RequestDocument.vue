@@ -1,106 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-    <!-- Navigation Bar -->
-    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <!-- Logo -->
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div
-                class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"
-              >
-                <i class="fas fa-building text-white text-sm"></i>
-              </div>
-            </div>
-            <span class="ml-3 text-xl font-semibold text-gray-900"
-              >Barangay Bagong Barrio</span
-            >
-          </div>
-
-          <!-- Desktop Navigation Links -->
-          <div class="hidden md:flex items-center space-x-8">
-            <router-link
-              to="/"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              Home
-            </router-link>
-            <router-link
-              to="/about"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              About
-            </router-link>
-            <router-link
-              to="/contact"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              Contact Us
-            </router-link>
-            <router-link
-              to="/services"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              Services
-            </router-link>
-            <router-link
-              to="/request-document"
-              class="text-blue-600 px-3 py-2 text-sm font-medium"
-            >
-              Request a Document
-            </router-link>
-          </div>
-
-          <!-- Authentication Section -->
-          <div class="hidden md:flex items-center space-x-4">
-            <div
-              v-if="authStore.isAuthenticated"
-              class="flex items-center space-x-3"
-            >
-              <div
-                class="flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-lg"
-              >
-                <div
-                  class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center"
-                >
-                  <i class="fas fa-user text-blue-600 text-xs"></i>
-                </div>
-                <span class="text-sm font-medium text-gray-900">
-                  {{ authStore.user?.firstName }} {{ authStore.user?.lastName }}
-                </span>
-              </div>
-              <router-link
-                to="/dashboard"
-                class="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-              >
-                Dashboard
-              </router-link>
-            </div>
-
-            <div v-else>
-              <router-link
-                to="/login"
-                class="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
-              >
-                <i class="fas fa-sign-in-alt mr-2"></i>
-                Log In
-              </router-link>
-            </div>
-          </div>
-
-          <!-- Mobile menu button -->
-          <div class="md:hidden flex items-center space-x-2">
-            <button
-              @click="toggleMobileMenu"
-              class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-            >
-              <i class="fas fa-bars text-xl"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
+  <PublicLayout>
 
     <!-- Document Request Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -109,10 +8,14 @@
           Request a Document
         </h1>
         <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-          Apply for barangay certificates and documents online. Fast,
-          convenient, and secure processing.
+          Select a document type and submit your request. Your profile information will be used automatically.
         </p>
+        <div class="mt-4 inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg">
+          <i class="fas fa-check-circle mr-2"></i>
+          Logged in as: {{ authStore.user?.firstName }} {{ authStore.user?.lastName }}
+        </div>
       </div>
+
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Document Types -->
@@ -127,17 +30,25 @@
                 :key="doc.id"
                 @click="selectDocument(doc)"
                 :class="[
-                  'w-full text-left p-3 rounded-lg transition-colors duration-200',
+                  'w-full text-left p-4 rounded-lg transition-colors duration-200 relative',
                   selectedDocument?.id === doc.id
                     ? 'bg-blue-600 text-white'
+                    : getPendingRequestForType(doc.documentType)
+                    ? 'bg-yellow-50 border-2 border-yellow-400 text-gray-700 hover:bg-yellow-100'
                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100',
                 ]"
               >
-                <div class="flex items-center space-x-3">
-                  <i :class="doc.icon" class="text-lg"></i>
-                  <div>
-                    <p class="font-medium">{{ doc.name }}</p>
-                    <p class="text-xs opacity-75">{{ doc.description }}</p>
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <p class="font-semibold text-base">{{ doc.name }}</p>
+                    <p class="text-sm opacity-75 mt-1">{{ doc.description }}</p>
+                    <div v-if="getPendingRequestForType(doc.documentType)" class="mt-2 flex items-center text-xs">
+                      <i class="fas fa-clock text-yellow-600 mr-1"></i>
+                      <span class="text-yellow-700 font-medium">Pending Request</span>
+                    </div>
+                  </div>
+                  <div v-if="getPendingRequestForType(doc.documentType)" class="ml-2">
+                    <i class="fas fa-hourglass-half text-yellow-500 text-xl"></i>
                   </div>
                 </div>
               </button>
@@ -145,137 +56,122 @@
           </div>
         </div>
 
-        <!-- Request Form -->
+        <!-- Request Details -->
         <div class="lg:col-span-2">
           <div
             v-if="selectedDocument"
             class="bg-white rounded-2xl shadow-xl p-8"
           >
             <div class="mb-6">
-              <h2 class="text-2xl font-bold text-gray-900 mb-2">
-                Request {{ selectedDocument.name }}
-              </h2>
+              <div class="flex items-center justify-between mb-2">
+                <h2 class="text-2xl font-bold text-gray-900">
+                  Request {{ selectedDocument.name }}
+                </h2>
+                <div v-if="getPendingRequestForType(selectedDocument.documentType)" class="flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                  <i class="fas fa-clock mr-2"></i>
+                  Pending Request
+                </div>
+              </div>
               <p class="text-gray-600">{{ selectedDocument.description }}</p>
+              
+              <!-- Pending Request Info -->
+              <div v-if="getPendingRequestForType(selectedDocument.documentType)" class="mt-4 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                <p class="text-sm text-yellow-800">
+                  <i class="fas fa-info-circle mr-2"></i>
+                  You have a pending request for this document. You can cancel it below to submit a new request.
+                </p>
+                <p class="text-xs text-yellow-700 mt-1">
+                  Submitted: {{ formatDateTime(getPendingRequestForType(selectedDocument.documentType)?.createdAt) }}
+                </p>
+              </div>
             </div>
 
-            <form @submit.prevent="submitRequest" class="space-y-6">
-              <!-- Personal Information -->
-              <div class="border-b border-gray-200 pb-6">
+            <!-- Profile Information Preview -->
+            <div class="space-y-6">
+              <div class="bg-gray-50 rounded-lg p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                  Personal Information
+                  Your Information (from profile)
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >First Name *</label
-                    >
-                    <input
-                      v-model="form.firstName"
-                      type="text"
-                      required
-                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter first name"
-                    />
+                    <span class="text-gray-500">Name:</span>
+                    <span class="ml-2 text-gray-900 font-medium">
+                      {{ authStore.user?.firstName }} {{ authStore.user?.middleName }} {{ authStore.user?.lastName }}
+                    </span>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >Last Name *</label
-                    >
-                    <input
-                      v-model="form.lastName"
-                      type="text"
-                      required
-                      class="w-full px-4 py-3-border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter last name"
-                    />
+                    <span class="text-gray-500">Email:</span>
+                    <span class="ml-2 text-gray-900">{{ authStore.user?.email }}</span>
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >Middle Name</label
-                    >
-                    <input
-                      v-model="form.middleName"
-                      type="text"
-                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter middle name"
-                    />
+                  <div v-if="authStore.user?.phoneNumber">
+                    <span class="text-gray-500">Phone:</span>
+                    <span class="ml-2 text-gray-900">{{ authStore.user?.phoneNumber }}</span>
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >Contact Number *</label
-                    >
-                    <input
-                      v-model="form.contactNumber"
-                      type="tel"
-                      required
-                      class="w-full px-4 py-3-border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter contact number"
-                    />
+                  <div v-if="authStore.user?.dateOfBirth">
+                    <span class="text-gray-500">Date of Birth:</span>
+                    <span class="ml-2 text-gray-900">{{ formatDate(authStore.user?.dateOfBirth) }}</span>
                   </div>
+                  <div v-if="authStore.user?.civilStatus">
+                    <span class="text-gray-500">Civil Status:</span>
+                    <span class="ml-2 text-gray-900">{{ authStore.user?.civilStatus }}</span>
+                  </div>
+                  <div v-if="authStore.user?.gender">
+                    <span class="text-gray-500">Gender:</span>
+                    <span class="ml-2 text-gray-900">{{ authStore.user?.gender }}</span>
+                  </div>
+                </div>
+                <div class="mt-4" v-if="authStore.user?.street || authStore.user?.barangay">
+                  <span class="text-gray-500">Address:</span>
+                  <span class="ml-2 text-gray-900">
+                    {{ getFullAddress() }}
+                  </span>
                 </div>
               </div>
 
-              <!-- Address Information -->
-              <div class="border-b border-gray-200 pb-6">
+              <!-- Purpose Input (only show if no pending request) -->
+              <div v-if="!getPendingRequestForType(selectedDocument.documentType)">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                  Address Information
+                  Purpose of Request
                 </h3>
-                <div class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >House/Unit Number *</label
-                    >
-                    <input
-                      v-model="form.houseNumber"
-                      type="text"
-                      required
-                      class="w-full px-4 py-3-border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter house/unit number"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >Street/Village *</label
-                    >
-                    <input
-                      v-model="form.street"
-                      type="text"
-                      required
-                      class="w-full px-4 py-3-border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter street or village name"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2"
-                      >Length of Residence *</label
-                    >
-                    <input
-                      v-model="form.lengthOfResidence"
-                      type="text"
-                      required
-                      class="w-full px-4 py-3-border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., 5 years, 6 months"
-                    />
-                  </div>
-                </div>
+                <textarea
+                  v-model="purpose"
+                  required
+                  rows="3"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Please specify the purpose of your document request..."
+                ></textarea>
+              </div>
+              
+              <!-- Show pending request purpose if exists -->
+              <div v-else class="bg-gray-50 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                  Request Purpose
+                </h3>
+                <p class="text-gray-700">{{ getPendingRequestForType(selectedDocument.documentType)?.purpose }}</p>
               </div>
 
-              <!-- Purpose -->
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                  Purpose of Request *
-                </h3>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2"
-                    >Specify Purpose</label
-                  >
-                  <textarea
-                    v-model="form.purpose"
-                    required
-                    rows="3"
-                    class="w-full px-4 py-3-border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Please specify the purpose of your document request..."
-                  ></textarea>
+              <!-- Profile Incomplete Warning -->
+              <div v-if="!isProfileComplete" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex">
+                  <i class="fas fa-exclamation-triangle text-yellow-600 mt-0.5"></i>
+                  <div class="ml-3">
+                    <h4 class="text-sm font-medium text-yellow-800">Profile Incomplete</h4>
+                    <p class="text-sm text-yellow-700 mt-1">
+                      Your profile is missing required information. Please complete the following fields:
+                    </p>
+                    <ul class="text-xs text-yellow-700 mt-2 ml-4 list-disc">
+                      <li v-if="!authStore.user?.firstName">First Name</li>
+                      <li v-if="!authStore.user?.lastName">Last Name</li>
+                      <li v-if="!authStore.user?.phoneNumber">Phone Number</li>
+                      <li v-if="!authStore.user?.street">Street Address</li>
+                    </ul>
+                    <p class="text-xs text-yellow-600 mt-2">
+                      Note: All other fields are optional.
+                    </p>
+                    <router-link to="/profile" class="text-sm text-yellow-800 underline hover:text-yellow-900 mt-2 inline-block">
+                      Complete Profile →
+                    </router-link>
+                  </div>
                 </div>
               </div>
 
@@ -292,18 +188,36 @@
                 </ul>
               </div>
 
-              <!-- Submit Button -->
+              <!-- Submit/Cancel Button -->
               <div class="flex items-center justify-between">
                 <button
                   type="button"
-                  @click="resetForm"
+                  @click="selectedDocument = null"
                   class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200"
                 >
-                  Clear Form
+                  Back
                 </button>
+                
+                <!-- Show Cancel Request button if this document type has a pending request -->
                 <button
-                  type="submit"
-                  :disabled="isSubmitting"
+                  v-if="getPendingRequestForType(selectedDocument.documentType)"
+                  @click="cancelPendingRequestForType(selectedDocument.documentType)"
+                  :disabled="isCancelling"
+                  class="px-8 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i
+                    v-if="isCancelling"
+                    class="fas fa-spinner fa-spin mr-2"
+                  ></i>
+                  <i v-else class="fas fa-times-circle mr-2"></i>
+                  {{ isCancelling ? "Cancelling..." : "Cancel Request" }}
+                </button>
+                
+                <!-- Show Submit Request button if no pending request for this document type -->
+                <button
+                  v-else
+                  @click="submitRequest"
+                  :disabled="isSubmitting || !purpose || !isProfileComplete"
                   class="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <i
@@ -313,7 +227,7 @@
                   {{ isSubmitting ? "Submitting..." : "Submit Request" }}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
 
           <!-- Initial State -->
@@ -330,119 +244,379 @@
         </div>
       </div>
     </div>
-  </div>
+  </PublicLayout>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, computed } from "vue";
+import PublicLayout from "@/layouts/PublicLayout.vue";
 import { useAuthStore } from "@/stores/auth";
+import { useToastStore } from "@/stores/toast";
+import { useRouter } from "vue-router";
+import api from "@/services/api";
 
 const authStore = useAuthStore();
-const showMobileMenu = ref(false);
+const toastStore = useToastStore();
+const router = useRouter();
+
 const isSubmitting = ref(false);
+const documentTypes = ref([]);
+const purpose = ref('');
+const isLoading = ref(true);
+const pendingRequests = ref([]);
+const isCancelling = ref(false);
 
-const documentTypes = ref([
-  {
-    id: 1,
-    name: "Barangay Certificate",
-    description: "Proof of residency in the barangay",
-    icon: "fas fa-file-certificate",
-    requirements: [
-      "Valid ID",
-      "Proof of residence (utility bill, etc.)",
-      "Accomplished application form",
-    ],
-  },
-  {
-    id: 2,
-    name: "Residency Certificate",
-    description: "Certificate of residency for specific purposes",
-    icon: "fas fa-home",
-    requirements: ["Valid ID", "Proof of residence", "Purpose documentation"],
-  },
-  {
-    id: 3,
-    name: "Clearance Certificate",
-    description: "Police/barangay clearance for employment or other purposes",
-    icon: "fas fa-shield-check",
-    requirements: [
-      "Valid ID",
-      "Community tax certificate",
-      "Proof of residence",
-    ],
-  },
-  {
-    id: 4,
-    name: "Indigency Certificate",
-    description: "Certificate for financial assistance programs",
-    icon: "fas fa-hands-helping",
-    requirements: [
-      "Valid ID",
-      "Proof of low income",
-      "Case study social worker report (if applicable)",
-    ],
-  },
-  {
-    id: 5,
-    name: "Business Permit",
-    description: "Permit to operate business within the barangay",
-    icon: "fas fa-briefcase",
-    requirements: [
-      "Valid ID",
-      "Business registration documents",
-      "Proof of address",
-      "Sanitary permit (if applicable)",
-    ],
-  },
-]);
-
-const selectedDocument = ref(null);
-const form = ref({
-  firstName: "",
-  lastName: "",
-  middleName: "",
-  contactNumber: "",
-  houseNumber: "",
-  street: "",
-  lengthOfResidence: "",
-  purpose: "",
+// Check authentication and redirect if needed
+onMounted(async () => {
+  // Redirect to login if not authenticated - do this FIRST before any API calls
+  if (!authStore.isAuthenticated) {
+    await router.push('/login');
+    return;
+  }
+  
+  // Only proceed if authenticated
+  try {
+    // Refresh user profile to get latest data
+    console.log('[RequestDocument] Fetching user profile...');
+    await authStore.fetchProfile();
+    console.log('[RequestDocument] User profile loaded:', authStore.user);
+    
+    // Check for existing pending request
+    await checkPendingRequest();
+    console.log('[RequestDocument] Profile completeness check:', {
+      firstName: authStore.user?.firstName,
+      lastName: authStore.user?.lastName,
+      streetNumber: authStore.user?.streetNumber,
+      streetName: authStore.user?.streetName,
+      dateOfBirth: authStore.user?.dateOfBirth,
+      isComplete: isProfileComplete.value
+    });
+    
+    // Use predefined document types (no need to fetch from API)
+    documentTypes.value = [
+      {
+        id: 1,
+        documentType: 'barangay_clearance',
+        name: "Barangay Clearance",
+        description: "Proof of residency in the barangay",
+        requirements: [
+          "Valid ID",
+          "Proof of residence (utility bill, etc.)",
+          "Accomplished application form",
+        ],
+      },
+      {
+        id: 2,
+        documentType: 'certificate_of_residency',
+        name: "Certificate of Residency",
+        description: "Certificate of residency for specific purposes",
+        requirements: ["Valid ID", "Proof of residence", "Purpose documentation"],
+      },
+      {
+        id: 3,
+        documentType: 'barangay_certificate',
+        name: "Barangay Certificate",
+        description: "General barangay certificate for various purposes",
+        requirements: [
+          "Valid ID",
+          "Proof of residence",
+          "Accomplished application form",
+        ],
+      },
+      {
+        id: 4,
+        documentType: 'certificate_of_indigency',
+        name: "Certificate of Indigency",
+        description: "Certificate for financial assistance programs",
+        requirements: [
+          "Valid ID",
+          "Proof of low income",
+          "Case study social worker report (if applicable)",
+        ],
+      },
+      {
+        id: 5,
+        documentType: 'business_permit',
+        name: "Business Permit",
+        description: "Permit to operate business within the barangay",
+        requirements: [
+          "Valid ID",
+          "Business registration documents",
+          "Proof of address",
+          "Sanitary permit (if applicable)",
+        ],
+      }
+    ];
+    
+    isLoading.value = false;
+  } catch (error) {
+    console.error('Failed to load profile:', error);
+    toastStore.showError('Failed to load profile data');
+    isLoading.value = false;
+  }
 });
 
-const toggleMobileMenu = () => {
-  showMobileMenu.value = !showMobileMenu.value;
-};
+const selectedDocument = ref(null);
+
+// Check if user profile is complete - TRUST THE BACKEND
+// The backend returns isProfileComplete field after checking all required fields
+const isProfileComplete = computed(() => {
+  const user = authStore.user;
+  if (!user) {
+    console.log('[RequestDocument] No user found in authStore');
+    return false;
+  }
+
+  // PRIMARY CHECK: Use the backend's isProfileComplete field if available
+  if (user.isProfileComplete !== undefined && user.isProfileComplete !== null) {
+    console.log('[RequestDocument] ✅ Using backend isProfileComplete status:', user.isProfileComplete);
+    return user.isProfileComplete;
+  }
+
+  // FALLBACK: If backend didn't provide isProfileComplete, compute it client-side
+  // Required fields for document generation: firstName, lastName, birthday, streetNumber, streetName
+  const requiredFields = {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    dateOfBirth: user.dateOfBirth,
+    streetNumber: user.streetNumber,
+    streetName: user.streetName,
+  };
+
+  const missingRequired = Object.entries(requiredFields)
+    .filter(([_, value]) => !value || (typeof value === 'string' && value.trim().length === 0))
+    .map(([key]) => key);
+
+  if (missingRequired.length > 0) {
+    console.log('[RequestDocument] ❌ Profile INCOMPLETE - Missing REQUIRED fields:', missingRequired);
+    console.log('[RequestDocument] Current field values:', requiredFields);
+  } else {
+    console.log('[RequestDocument] ✅ Profile is COMPLETE - All required fields filled');
+  }
+
+  return missingRequired.length === 0;
+});
 
 const selectDocument = (document) => {
   selectedDocument.value = document;
-  resetForm();
+  purpose.value = '';
 };
 
-const resetForm = () => {
-  form.value = {
-    firstName: "",
-    lastName: "",
-    middleName: "",
-    contactNumber: "",
-    houseNumber: "",
-    street: "",
-    lengthOfResidence: "",
-    purpose: "",
+const getFullAddress = () => {
+  const user = authStore.user;
+  if (!user) return '';
+  
+  const parts = [];
+  if (user.houseNumber) parts.push(user.houseNumber);
+  if (user.street) parts.push(user.street);
+  if (user.barangay) parts.push(`Barangay ${user.barangay}`);
+  if (user.city) parts.push(user.city);
+  if (user.province) parts.push(user.province);
+  if (user.zipCode) parts.push(user.zipCode);
+  
+  return parts.filter(Boolean).join(', ');
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+const getDocumentDescription = (documentType) => {
+  const descriptions = {
+    'barangay_clearance': 'Barangay clearance for various purposes',
+    'certificate_of_residency': 'Certificate of residency for specific purposes',
+    'barangay_certificate': 'General barangay certificate for various purposes',
+    'certificate_of_indigency': 'Certificate for financial assistance programs',
+    'business_permit': 'Permit to operate business within the barangay'
   };
+  return descriptions[documentType] || 'Official barangay document';
+};
+
+const getDocumentRequirements = (documentType) => {
+  const requirements = {
+    'barangay_clearance': [
+      'Valid ID',
+      'Proof of residence (utility bill, etc.)',
+      'Purpose documentation'
+    ],
+    'certificate_of_residency': [
+      'Valid ID',
+      'Proof of residence',
+      'Purpose documentation'
+    ],
+    'barangay_certificate': [
+      'Valid ID',
+      'Proof of residence',
+      'Accomplished application form'
+    ],
+    'certificate_of_indigency': [
+      'Valid ID',
+      'Proof of low income',
+      'Case study social worker report (if applicable)'
+    ],
+    'business_permit': [
+      'Valid ID',
+      'Business registration documents',
+      'Proof of address',
+      'Sanitary permit (if applicable)'
+    ]
+  };
+  return requirements[documentType] || ['Valid ID', 'Proof of residence'];
+};
+
+const checkPendingRequest = async () => {
+  try {
+    const response = await api.get('/documents/my-pending-requests');
+    pendingRequests.value = response.data.data || [];
+    console.log('[RequestDocument] Pending requests:', pendingRequests.value);
+  } catch (error) {
+    console.error('[RequestDocument] Failed to check pending requests:', error);
+    // Set to empty array on error to prevent undefined issues
+    pendingRequests.value = [];
+  }
+};
+
+const getPendingRequestForType = (documentType) => {
+  if (!pendingRequests.value || !Array.isArray(pendingRequests.value)) {
+    return null;
+  }
+  return pendingRequests.value.find(req => req.requestType === documentType) || null;
+};
+
+const cancelPendingRequestForType = async (documentType) => {
+  const request = getPendingRequestForType(documentType);
+  if (!request) return;
+  
+  if (!confirm(`Are you sure you want to cancel your pending ${getDocumentTypeName(documentType)} request?`)) {
+    return;
+  }
+  
+  isCancelling.value = true;
+  
+  try {
+    await api.post(`/documents/cancel/${request.id}`);
+    toastStore.showSuccess('Request cancelled successfully!');
+    
+    // Remove from pending requests array
+    pendingRequests.value = pendingRequests.value.filter(req => req.id !== request.id);
+    
+    // Clear selected document to go back to selection
+    selectedDocument.value = null;
+    purpose.value = '';
+  } catch (error) {
+    console.error('[RequestDocument] Failed to cancel request:', error);
+    toastStore.showError(error.response?.data?.message || 'Failed to cancel request');
+  } finally {
+    isCancelling.value = false;
+  }
+};
+
+const getDocumentTypeName = (type) => {
+  const names = {
+    'barangay_clearance': 'Barangay Clearance',
+    'certificate_of_residency': 'Certificate of Residency',
+    'barangay_certificate': 'Barangay Certificate',
+    'certificate_of_indigency': 'Certificate of Indigency',
+    'business_permit': 'Business Permit'
+  };
+  return names[type] || type;
+};
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 const submitRequest = async () => {
+  console.log('=== Submit Request Debug ===');
+  
+  if (!selectedDocument.value) {
+    alert('Please select a document type');
+    return;
+  }
+
+  if (!purpose.value) {
+    alert('Please specify the purpose of your request');
+    return;
+  }
+
+  // CRITICAL: Refresh profile data from backend before checking completeness
+  console.log('[RequestDocument] Refreshing profile data before submission...');
+  try {
+    await authStore.fetchProfile();
+    console.log('[RequestDocument] Profile refreshed. User data:', authStore.user);
+    console.log('[RequestDocument] Backend isProfileComplete:', authStore.user?.isProfileComplete);
+  } catch (error) {
+    console.error('[RequestDocument] Failed to refresh profile:', error);
+    alert('Failed to verify profile status. Please try again.');
+    return;
+  }
+
+  console.log('[RequestDocument] Profile complete?', isProfileComplete.value);
+
+  if (!isProfileComplete.value) {
+    const user = authStore.user;
+    const missing = [];
+    if (!user?.firstName || user.firstName.trim().length === 0) missing.push('First Name');
+    if (!user?.lastName || user.lastName.trim().length === 0) missing.push('Last Name');
+    if (!user?.dateOfBirth) missing.push('Date of Birth');
+    if (!user?.streetNumber || user.streetNumber.trim().length === 0) missing.push('Street Number');
+    if (!user?.streetName || user.streetName.trim().length === 0) missing.push('Street Name');
+    
+    console.error('[RequestDocument] Profile incomplete! Missing required fields:', missing);
+    console.log('[RequestDocument] Current profile:', {
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+      dateOfBirth: user?.dateOfBirth,
+      streetNumber: user?.streetNumber,
+      streetName: user?.streetName,
+      backendIsProfileComplete: user?.isProfileComplete
+    });
+    
+    toastStore.showError(`Please complete your profile before requesting documents.\n\nMissing: ${missing.join(', ')}`);
+    router.push('/profile');
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    alert(
-      `Your request for ${selectedDocument.value.name} has been submitted successfully! We will process it within 3-5 working days.`,
-    );
-    resetForm();
-  } catch {
-    alert("Error submitting request. Please try again.");
+    console.log('[RequestDocument] Submitting request:', {
+      documentType: selectedDocument.value.documentType,
+      purpose: purpose.value,
+      userFirstName: authStore.user?.firstName,
+      userLastName: authStore.user?.lastName
+    });
+    
+    // Submit request with authenticated user's data using API directly
+    const response = await api.post('/documents/request', {
+      requestType: selectedDocument.value.documentType,
+      purpose: purpose.value
+    });
+    
+    console.log('[RequestDocument] Request submitted successfully:', response.data);
+    toastStore.showSuccess('Document request submitted successfully! Please wait for approval.');
+    
+    // Refresh pending requests status
+    await checkPendingRequest();
+    
+    // Keep the document selected but clear purpose to show the cancel button
+    purpose.value = '';
+  } catch (error) {
+    console.error('[RequestDocument] Submit error:', error);
+    const backendMessage = error.response?.data?.message;
+    toastStore.showError(backendMessage || 'Error submitting request. Please try again.');
   } finally {
     isSubmitting.value = false;
   }

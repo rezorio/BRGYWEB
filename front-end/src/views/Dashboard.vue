@@ -25,7 +25,12 @@
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div v-if="loading && authStore.isAdmin" class="text-center py-8">
+        <i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i>
+        <p class="mt-2 text-sm text-gray-600">Loading dashboard statistics...</p>
+      </div>
+      
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="card">
           <div class="flex items-center">
             <div class="flex-shrink-0 bg-blue-100 rounded-lg p-3">
@@ -71,12 +76,12 @@
         <div class="card">
           <div class="flex items-center">
             <div class="flex-shrink-0 bg-purple-100 rounded-lg p-3">
-              <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+              <i class="fas fa-bullhorn text-purple-600 text-xl"></i>
             </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Completion Rate</p>
-              <p class="text-2xl font-bold text-gray-900">
-                {{ stats.completionRate }}%
+            <div class="ml-4 flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-600">Upcoming Event</p>
+              <p class="text-base font-bold text-gray-900 break-words" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ stats.upcomingEvent }}
               </p>
             </div>
           </div>
@@ -150,28 +155,53 @@
           </div>
         </div>
 
-        <!-- Recent Activity -->
+        <!-- Document Requests Activity -->
         <div class="card">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">
-            Recent Activity
-          </h2>
-          <div class="space-y-4">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">
+              Document Requests
+            </h2>
+            <button
+              v-if="authStore.isAdmin"
+              @click="fetchDocumentRequests"
+              :disabled="loadingRequests"
+              class="text-sm text-blue-600 hover:text-blue-800"
+            >
+              <i
+                :class="loadingRequests ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'"
+                class="mr-1"
+              ></i>
+              Refresh
+            </button>
+          </div>
+          
+          <div v-if="loadingRequests" class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+            <p class="mt-2 text-sm text-gray-600">Loading requests...</p>
+          </div>
+
+          <div v-else-if="documentRequests.length === 0" class="text-center py-8">
+            <i class="fas fa-inbox text-gray-400 text-4xl mb-3"></i>
+            <p class="text-sm text-gray-600">No document requests yet</p>
+          </div>
+
+          <div v-else class="space-y-4">
             <div
-              v-for="activity in recentActivities"
-              :key="activity.id"
+              v-for="request in documentRequests"
+              :key="request.id"
               class="flex items-start space-x-3"
             >
               <div class="flex-shrink-0">
-                <div :class="activity.iconBg" class="rounded-lg p-2">
-                  <i :class="activity.icon" class="text-sm"></i>
+                <div :class="request.iconBg" class="rounded-lg p-2">
+                  <i :class="request.icon" class="text-sm"></i>
                 </div>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900">
-                  {{ activity.title }}
+                  {{ request.title }}
                 </p>
-                <p class="text-sm text-gray-600">{{ activity.description }}</p>
-                <p class="text-xs text-gray-500 mt-1">{{ activity.time }}</p>
+                <p class="text-sm text-gray-600">{{ request.description }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ request.time }}</p>
               </div>
             </div>
           </div>
@@ -225,52 +255,70 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { useToastStore } from "@/stores/toast";
+import api from "@/services/api";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const toastStore = useToastStore();
 
-// Mock data - in a real app, this would come from API
+// Real data from API
 const stats = ref({
-  totalUsers: 1247,
-  activeUsers: 892,
-  pendingRequests: 23,
-  completionRate: 87,
+  totalUsers: 0,
+  activeUsers: 0,
+  pendingRequests: 0,
+  upcomingEvent: "Loading...",
 });
 
-const recentActivities = ref([
-  {
-    id: 1,
-    title: "Profile Updated",
-    description: "You updated your profile information",
-    time: "2 hours ago",
-    icon: "fas fa-user text-blue-600",
-    iconBg: "bg-blue-100",
-  },
-  {
-    id: 2,
-    title: "Document Uploaded",
-    description: "New document added to your files",
-    time: "1 day ago",
-    icon: "fas fa-file-upload text-green-600",
-    iconBg: "bg-green-100",
-  },
-  {
-    id: 3,
-    title: "System Update",
-    description: "New features have been added to the system",
-    time: "3 days ago",
-    icon: "fas fa-system text-purple-600",
-    iconBg: "bg-purple-100",
-  },
-  {
-    id: 4,
-    title: "Login Alert",
-    description: "New login detected from your account",
-    time: "1 week ago",
-    icon: "fas fa-sign-in-alt text-yellow-600",
-    iconBg: "bg-yellow-100",
-  },
-]);
+const loading = ref(false);
+const loadingRequests = ref(false);
+const documentRequests = ref([]);
+
+// Fetch dashboard statistics
+const fetchDashboardStats = async () => {
+  // Only fetch if user is admin
+  if (!authStore.isAdmin) {
+    return;
+  }
+
+  try {
+    loading.value = true;
+    const response = await api.get("/dashboard/stats");
+    stats.value = response.data;
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    toastStore.showError("Failed to load dashboard statistics");
+    // Set default values on error
+    stats.value = {
+      totalUsers: 0,
+      activeUsers: 0,
+      pendingRequests: 0,
+      upcomingEvent: "Unable to load",
+    };
+  } finally {
+    loading.value = false;
+  }
+};
+
+// Fetch document request activities
+const fetchDocumentRequests = async () => {
+  // Only fetch if user is admin
+  if (!authStore.isAdmin) {
+    return;
+  }
+
+  try {
+    loadingRequests.value = true;
+    const response = await api.get("/dashboard/recent-requests?limit=5");
+    documentRequests.value = response.data;
+  } catch (error) {
+    console.error("Error fetching document requests:", error);
+    toastStore.showError("Failed to load document requests");
+    documentRequests.value = [];
+  } finally {
+    loadingRequests.value = false;
+  }
+};
 
 const navigateToProfile = () => {
   router.push("/profile");
@@ -294,6 +342,7 @@ const formatDate = () => {
 };
 
 onMounted(() => {
-  // Dashboard component mounted
+  fetchDashboardStats();
+  fetchDocumentRequests();
 });
 </script>

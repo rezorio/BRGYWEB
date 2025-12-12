@@ -1,215 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-    <!-- Modern Navigation Bar -->
-    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <!-- Logo -->
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div
-                class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center"
-              >
-                <i class="fas fa-building text-white text-sm"></i>
-              </div>
-            </div>
-            <span class="ml-3 text-xl font-semibold text-gray-900"
-              >Barangay Bagong Barrio</span
-            >
-          </div>
-
-          <!-- Desktop Navigation Links -->
-          <div class="hidden md:flex items-center space-x-8">
-            <router-link
-              to="/about"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              About
-            </router-link>
-            <router-link
-              to="/contact"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              Contact Us
-            </router-link>
-            <router-link
-              to="/services"
-              class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors duration-200"
-            >
-              Services
-            </router-link>
-            <router-link
-              to="/request-document"
-              class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-            >
-              <i class="fas fa-file-alt mr-2"></i>
-              Request a Document
-            </router-link>
-          </div>
-
-          <!-- Authentication Section -->
-          <div class="hidden md:flex items-center space-x-4">
-            <!-- Authenticated User -->
-            <div
-              v-if="authStore.isAuthenticated"
-              class="flex items-center space-x-3"
-            >
-              <div class="flex items-center space-x-2">
-                <div
-                  class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
-                ></div>
-                <span class="text-sm text-gray-600">Logged in as:</span>
-              </div>
-              <div
-                class="flex items-center space-x-2 bg-blue-50 px-3 py-1.5 rounded-lg"
-              >
-                <div
-                  class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center"
-                >
-                  <i class="fas fa-user text-blue-600 text-xs"></i>
-                </div>
-                <span class="text-sm font-medium text-gray-900">
-                  {{ authStore.user?.firstName }} {{ authStore.user?.lastName }}
-                </span>
-                <span
-                  class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full"
-                >
-                  {{ authStore.userRole }}
-                </span>
-              </div>
-              <router-link
-                to="/dashboard"
-                class="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-              >
-                Dashboard
-              </router-link>
-            </div>
-
-            <!-- Unauthenticated User - Unified Log In Button -->
-            <div v-else>
-              <router-link
-                to="/login"
-                class="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
-              >
-                <i class="fas fa-sign-in-alt mr-2"></i>
-                Log In
-              </router-link>
-            </div>
-          </div>
-
-          <!-- Mobile menu button -->
-          <div class="md:hidden flex items-center space-x-2">
-            <!-- Mobile Auth Status -->
-            <div
-              v-if="authStore.isAuthenticated"
-              class="flex items-center space-x-2"
-            >
-              <div
-                class="w-2 h-2 bg-green-500 rounded-full animate-pulse"
-              ></div>
-              <span class="text-xs text-gray-600 font-medium">
-                {{ authStore.user?.firstName }}
-              </span>
-            </div>
-            <button
-              @click="toggleMobileMenu"
-              class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-            >
-              <i class="fas fa-bars text-xl"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Mobile Navigation Menu -->
-        <transition name="slide-down">
-          <div v-if="showMobileMenu" class="md:hidden border-t border-gray-200">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-              <!-- Mobile Navigation Links -->
-              <router-link
-                to="/about"
-                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors duration-200"
-                @click="closeMobileMenu"
-              >
-                <i class="fas fa-info-circle mr-3"></i>
-                About
-              </router-link>
-              <router-link
-                to="/contact"
-                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors duration-200"
-                @click="closeMobileMenu"
-              >
-                <i class="fas fa-envelope mr-3"></i>
-                Contact Us
-              </router-link>
-              <router-link
-                to="/services"
-                class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors duration-200"
-                @click="closeMobileMenu"
-              >
-                <i class="fas fa-concierge-bell mr-3"></i>
-                Services
-              </router-link>
-              <router-link
-                to="/request-document"
-                class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-                @click="closeMobileMenu"
-              >
-                <i class="fas fa-file-alt mr-3"></i>
-                Request a Document
-              </router-link>
-
-              <!-- Mobile Authentication Section -->
-              <div class="border-t border-gray-200 pt-3 mt-3">
-                <div v-if="authStore.isAuthenticated" class="space-y-2">
-                  <div class="px-3 py-2 bg-blue-50 rounded-lg">
-                    <div class="flex items-center space-x-3">
-                      <div
-                        class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center"
-                      >
-                        <i class="fas fa-user text-blue-600 text-sm"></i>
-                      </div>
-                      <div>
-                        <p class="text-sm font-medium text-gray-900">
-                          {{ authStore.user?.firstName }}
-                          {{ authStore.user?.lastName }}
-                        </p>
-                        <p class="text-xs text-gray-600">
-                          {{ authStore.user?.email }}
-                        </p>
-                        <span
-                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-1"
-                        >
-                          {{ authStore.userRole }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <router-link
-                    to="/dashboard"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-                    @click="closeMobileMenu"
-                  >
-                    <i class="fas fa-tachometer-alt mr-3"></i>
-                    Dashboard
-                  </router-link>
-                </div>
-
-                <div v-else>
-                  <router-link
-                    to="/login"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-                    @click="closeMobileMenu"
-                  >
-                    <i class="fas fa-sign-in-alt mr-3"></i>
-                    Log In
-                  </router-link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </transition>
-      </div>
-    </nav>
+  <PublicLayout>
 
     <!-- Hero Section -->
     <div class="relative overflow-hidden">
@@ -267,40 +57,59 @@
       </div>
     </div>
 
-    <!-- Features Section -->
+    <!-- Announcements Section -->
     <div class="py-16 lg:py-24 bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
+        <div class="text-center mb-12">
           <h2 class="text-3xl sm:text-4xl font-bold text-gray-900">
-            Everything You Need in One Platform
+            Latest Announcements
           </h2>
           <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-            Powerful features designed to make barangay management simple,
-            efficient, and transparent.
+            Stay updated with the latest news and announcements from Barangay Bagong Barrio.
           </p>
         </div>
 
-        <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div
-            v-for="feature in features"
-            :key="feature.id"
-            class="text-center p-6 rounded-xl hover:shadow-lg-transition-all duration-300 hover:-translate-y-1"
-          >
-            <div
-              class="mx-auto w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6"
-            >
-              <i :class="feature.icon" class="text-blue-600 text-2xl"></i>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-3">
-              {{ feature.title }}
-            </h3>
-            <p class="text-gray-600 leading-relaxed">
-              {{ feature.description }}
-            </p>
+        <!-- Announcements Display -->
+        <div v-if="announcements.length > 0">
+          <!-- Grid Layout for 3 or fewer announcements -->
+          <div v-if="announcements.length <= 3" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnnouncementCard
+              v-for="announcement in displayedAnnouncements"
+              :key="announcement.id"
+              :announcement="announcement"
+              :show-read-more="true"
+              @read-more="handleReadMore"
+            />
           </div>
+          
+          <!-- Carousel for more than 3 announcements -->
+          <div v-else>
+            <AnnouncementCarousel
+              :announcements="announcements"
+              :auto-play="true"
+              :auto-play-interval="5000"
+              :show-read-more="true"
+              @read-more="handleReadMore"
+            />
+          </div>
+        </div>
+
+        <!-- No Announcements State -->
+        <div v-else class="text-center py-12">
+          <i class="fas fa-bullhorn text-gray-300 text-6xl mb-4"></i>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No Announcements Yet</h3>
+          <p class="text-gray-600">Check back later for updates from the barangay.</p>
         </div>
       </div>
     </div>
+
+    <!-- Announcement Modal -->
+    <AnnouncementModal
+      v-if="selectedAnnouncement"
+      :show="showAnnouncementModal"
+      :announcement="selectedAnnouncement"
+      @close="showAnnouncementModal = false"
+    />
 
     <!-- Community Info Section -->
     <div class="py-16 lg:py-24 bg-blue-50">
@@ -449,17 +258,57 @@
         </div>
       </div>
     </footer>
-  </div>
+  </PublicLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
+import announcementService from "@/services/announcementService";
+import AnnouncementCard from "@/components/AnnouncementCard.vue";
+import AnnouncementCarousel from "@/components/AnnouncementCarousel.vue";
+import AnnouncementModal from "@/components/AnnouncementModal.vue";
+import PublicLayout from "@/layouts/PublicLayout.vue";
 
 const authStore = useAuthStore();
-const showMobileMenu = ref(false);
+const announcements = ref([]);
+const showAnnouncementModal = ref(false);
+const selectedAnnouncement = ref(null);
 
-// Initialize authentication state on component mount
+// Computed property to limit displayed announcements to 3
+const displayedAnnouncements = computed(() => {
+  return announcements.value.slice(0, 3);
+});
+
+// Format date helper function
+const formatDate = (date) => {
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(date).toLocaleDateString('en-US', options);
+};
+
+// Handle read more click
+const handleReadMore = (announcement) => {
+  selectedAnnouncement.value = announcement;
+  showAnnouncementModal.value = true;
+};
+
+// Fetch announcements from API
+const fetchAnnouncements = async () => {
+  try {
+    const data = await announcementService.getAll();
+    // Sort by date descending and take only active announcements
+    announcements.value = data
+      .filter(a => a.isActive)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to fetch announcements:", error);
+    // Keep announcements empty on error
+    announcements.value = [];
+  }
+};
+
+// Initialize authentication state and fetch announcements on component mount
 onMounted(async () => {
   try {
     await authStore.initializeSession();
@@ -467,59 +316,25 @@ onMounted(async () => {
     // eslint-disable-next-line no-console
     console.error("Failed to initialize authentication session:", error);
   }
+  
+  // Fetch announcements
+  await fetchAnnouncements();
 });
-
-// Mobile menu functions
-const toggleMobileMenu = () => {
-  showMobileMenu.value = !showMobileMenu.value;
-};
-
-const closeMobileMenu = () => {
-  showMobileMenu.value = false;
-};
-
-const features = ref([
-  {
-    id: 1,
-    icon: "fas fa-user-shield",
-    title: "Secure Authentication",
-    description:
-      "Advanced security with role-based access control and JWT tokens to protect your data and privacy.",
-  },
-  {
-    id: 2,
-    icon: "fas fa-users-cog",
-    title: "User Management",
-    description:
-      "Comprehensive user management system with role assignments and permission controls for secure access.",
-  },
-  {
-    id: 3,
-    icon: "fas fa-chart-line",
-    title: "Analytics Dashboard",
-    description:
-      "Real-time insights and analytics to help you make informed decisions for your community development.",
-  },
-  {
-    id: 4,
-    icon: "fas fa-file-alt",
-    title: "Document Management",
-    description:
-      "Organize and manage important barangay documents with ease and security for all residents.",
-  },
-  {
-    id: 5,
-    icon: "fas fa-bell",
-    title: "Notification System",
-    description:
-      "Stay informed with real-time notifications and updates from your barangay office and community.",
-  },
-  {
-    id: 6,
-    icon: "fas fa-mobile-alt",
-    title: "Mobile Responsive",
-    description:
-      "Access the platform from any device with our fully responsive mobile-friendly design.",
-  },
-]);
 </script>
+
+<style scoped>
+/* Line clamp utilities for text truncation */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>

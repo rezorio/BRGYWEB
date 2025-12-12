@@ -43,105 +43,209 @@
 
             <!-- Profile Form -->
             <form @submit.prevent="handleUpdateProfile">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- First Name -->
-                <div>
-                  <label for="firstName" class="form-label">First Name</label>
-                  <input
-                    id="firstName"
-                    v-model="profileForm.firstName"
-                    type="text"
-                    :disabled="!editMode"
-                    class="form-input"
-                    :class="{ 'bg-gray-50': !editMode }"
-                  />
-                </div>
+              <!-- Personal Information Section -->
+              <div class="mb-6">
+                <h3 class="text-md font-semibold text-gray-900 mb-4 pb-2 border-b">
+                  Personal Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- First Name -->
+                  <div>
+                    <label for="firstName" class="form-label">First Name *</label>
+                    <input
+                      id="firstName"
+                      v-model="profileForm.firstName"
+                      type="text"
+                      required
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                    />
+                  </div>
 
-                <!-- Last Name -->
-                <div>
-                  <label for="lastName" class="form-label">Last Name</label>
-                  <input
-                    id="lastName"
-                    v-model="profileForm.lastName"
-                    type="text"
-                    :disabled="!editMode"
-                    class="form-input"
-                    :class="{ 'bg-gray-50': !editMode }"
-                  />
-                </div>
+                  <!-- Middle Name -->
+                  <div>
+                    <label for="middleName" class="form-label">Middle Name</label>
+                    <input
+                      id="middleName"
+                      v-model="profileForm.middleName"
+                      type="text"
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                    />
+                  </div>
 
-                <!-- Email -->
-                <div>
-                  <label for="email" class="form-label">Email Address</label>
-                  <input
-                    id="email"
-                    v-model="profileForm.email"
-                    type="email"
-                    disabled
-                    class="form-input bg-gray-50"
-                  />
-                  <p class="text-xs text-gray-500 mt-1">
-                    Email cannot be changed. Contact admin for assistance.
-                  </p>
-                </div>
+                  <!-- Last Name -->
+                  <div>
+                    <label for="lastName" class="form-label">Last Name *</label>
+                    <input
+                      id="lastName"
+                      v-model="profileForm.lastName"
+                      type="text"
+                      required
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                    />
+                  </div>
 
-                <!-- Role -->
-                <div>
-                  <label for="role" class="form-label">Role</label>
-                  <input
-                    id="role"
-                    :value="authStore.userRole"
-                    type="text"
-                    disabled
-                    class="form-input bg-gray-50"
-                  />
-                  <p class="text-xs text-gray-500 mt-1">
-                    Role is assigned by administrator.
-                  </p>
-                </div>
+                  <!-- Suffix -->
+                  <div>
+                    <label for="suffix" class="form-label">Suffix</label>
+                    <input
+                      id="suffix"
+                      v-model="profileForm.suffix"
+                      type="text"
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                      placeholder="Jr., Sr., III, etc."
+                    />
+                  </div>
 
-                <!-- Phone -->
-                <div>
-                  <label for="phone" class="form-label">Phone Number</label>
-                  <input
-                    id="phone"
-                    v-model="profileForm.phone"
-                    type="tel"
-                    :disabled="!editMode"
-                    class="form-input"
-                    :class="{ 'bg-gray-50': !editMode }"
-                    placeholder="+63 XXX XXX XXXX"
-                  />
-                </div>
+                  <!-- Date of Birth -->
+                  <div>
+                    <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                    <input
+                      id="dateOfBirth"
+                      v-model="profileForm.dateOfBirth"
+                      type="date"
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                    />
+                  </div>
 
-                <!-- Address -->
-                <div>
-                  <label for="address" class="form-label">Address</label>
-                  <input
-                    id="address"
-                    v-model="profileForm.address"
-                    type="text"
-                    :disabled="!editMode"
-                    class="form-input"
-                    :class="{ 'bg-gray-50': !editMode }"
-                    placeholder="Enter your address"
-                  />
-                </div>
 
-                <!-- Bio -->
-                <div class="md:col-span-2">
-                  <label for="bio" class="form-label">Bio</label>
-                  <textarea
-                    id="bio"
-                    v-model="profileForm.bio"
-                    :disabled="!editMode"
-                    rows="4"
-                    class="form-input"
-                    :class="{ 'bg-gray-50': !editMode }"
-                    placeholder="Tell us about yourself..."
-                  ></textarea>
+                  <!-- Gender -->
+                  <div>
+                    <label for="gender" class="form-label">Gender</label>
+                    <select
+                      id="gender"
+                      v-model="profileForm.gender"
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <!-- Civil Status -->
+                  <div>
+                    <label for="civilStatus" class="form-label">Civil Status</label>
+                    <select
+                      id="civilStatus"
+                      v-model="profileForm.civilStatus"
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                    >
+                      <option value="">Select Civil Status</option>
+                      <option value="single">Single</option>
+                      <option value="married">Married</option>
+                      <option value="widowed">Widowed</option>
+                      <option value="separated">Separated</option>
+                      <option value="divorced">Divorced</option>
+                    </select>
+                  </div>
+
                 </div>
               </div>
+
+              <!-- Contact Information Section -->
+              <div class="mb-6">
+                <h3 class="text-md font-semibold text-gray-900 mb-4 pb-2 border-b">
+                  Contact Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- Email -->
+                  <div>
+                    <label for="email" class="form-label">Email Address</label>
+                    <input
+                      id="email"
+                      v-model="profileForm.email"
+                      type="email"
+                      disabled
+                      class="form-input bg-gray-50"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">
+                      Email cannot be changed. Contact admin for assistance.
+                    </p>
+                  </div>
+
+                  <!-- Phone Number -->
+                  <div>
+                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                    <input
+                      id="phoneNumber"
+                      v-model="profileForm.phoneNumber"
+                      type="tel"
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                      placeholder="09XX XXX XXXX"
+                    />
+                  </div>
+
+                  <!-- Role -->
+                  <div>
+                    <label for="role" class="form-label">Role</label>
+                    <input
+                      id="role"
+                      :value="authStore.userRole"
+                      type="text"
+                      disabled
+                      class="form-input bg-gray-50"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">
+                      Role is assigned by administrator.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Philippine Address Section -->
+              <div class="mb-6">
+                <h3 class="text-md font-semibold text-gray-900 mb-4 pb-2 border-b">
+                  Address (Philippines)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- House Number -->
+                  <div>
+                    <label for="houseNumber" class="form-label">House/Unit Number</label>
+                    <input
+                      id="houseNumber"
+                      v-model="profileForm.houseNumber"
+                      type="text"
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                      placeholder="e.g., 123"
+                    />
+                  </div>
+
+                  <!-- Street -->
+                  <div>
+                    <label for="street" class="form-label">Street</label>
+                    <input
+                      id="street"
+                      v-model="profileForm.street"
+                      type="text"
+                      :disabled="!editMode"
+                      class="form-input"
+                      :class="{ 'bg-gray-50': !editMode }"
+                      placeholder="e.g., Main Street"
+                    />
+                  </div>
+
+                </div>
+              </div>
+
 
               <!-- Save Button -->
               <div v-if="editMode" class="mt-6 flex justify-end space-x-3">
@@ -318,12 +422,22 @@ const loading = ref(false);
 const passwordLoading = ref(false);
 
 const profileForm = reactive({
+  // Personal Information
   firstName: "",
+  middleName: "",
   lastName: "",
+  suffix: "",
+  dateOfBirth: "",
+  gender: "",
+  civilStatus: "",
+  
+  // Contact Information
   email: "",
-  phone: "",
-  address: "",
-  bio: "",
+  phoneNumber: "",
+  
+  // Philippine Address
+  houseNumber: "",
+  street: "",
 });
 
 const passwordForm = reactive({
@@ -342,25 +456,51 @@ const toggleEditMode = () => {
 
 const loadProfileData = () => {
   const user = authStore.user;
+  
+  // Personal Information
   profileForm.firstName = user?.firstName || "";
+  profileForm.middleName = user?.middleName || "";
   profileForm.lastName = user?.lastName || "";
+  profileForm.suffix = user?.suffix || "";
+  profileForm.dateOfBirth = user?.dateOfBirth ? user.dateOfBirth.split('T')[0] : "";
+  profileForm.gender = user?.gender || "";
+  profileForm.civilStatus = user?.civilStatus || "";
+  
+  // Contact Information
   profileForm.email = user?.email || "";
-  profileForm.phone = "+63 912 345 6789"; // Mock data
-  profileForm.address = "123 Main St, Barangay Central"; // Mock data
-  profileForm.bio = "Active community member"; // Mock data
+  profileForm.phoneNumber = user?.phoneNumber || "";
+  
+  // Philippine Address
+  profileForm.houseNumber = user?.houseNumber || "";
+  profileForm.street = user?.street || "";
 };
 
 const handleUpdateProfile = async () => {
   try {
     loading.value = true;
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Call API to update profile
+    const response = await authStore.updateProfile({
+      firstName: profileForm.firstName,
+      middleName: profileForm.middleName,
+      lastName: profileForm.lastName,
+      suffix: profileForm.suffix,
+      dateOfBirth: profileForm.dateOfBirth,
+      gender: profileForm.gender,
+      civilStatus: profileForm.civilStatus,
+      phoneNumber: profileForm.phoneNumber,
+      houseNumber: profileForm.houseNumber,
+      street: profileForm.street,
+    });
 
+    // Refresh profile data
+    await authStore.fetchProfile();
+    
     toastStore.showSuccess("Profile updated successfully!");
     editMode.value = false;
-  } catch {
-    toastStore.showError("Failed to update profile");
+  } catch (error) {
+    console.error('Profile update error:', error);
+    toastStore.showError(error.response?.data?.message || "Failed to update profile");
   } finally {
     loading.value = false;
   }

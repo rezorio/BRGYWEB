@@ -5,6 +5,9 @@ import { User } from '../auth/entities/user.entity';
 import { Role } from '../auth/entities/role.entity';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
 import { ActivityLog } from '../auth/entities/activity-log.entity';
+import { LoginAttempt } from '../auth/entities/login-attempt.entity';
+import { Announcement } from '../announcements/entities/announcement.entity';
+import { DocumentRequest } from '../documents/entities/document-request.entity';
 
 @Module({
   imports: [
@@ -17,9 +20,9 @@ import { ActivityLog } from '../auth/entities/activity-log.entity';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
-        entities: [User, Role, RefreshToken, ActivityLog],
+        entities: [User, Role, RefreshToken, ActivityLog, LoginAttempt, Announcement, DocumentRequest],
         synchronize: false,
-        logging: configService.get<string>('NODE_ENV') === 'development',
+        // logging: configService.get<string>('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
     }),

@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="min-h-screen bg-gray-50">
-    <Navigation v-if="!isAuthPage && !isHomePage" />
-    <main :class="{ 'pt-16': !isAuthPage && !isHomePage }">
+    <Navigation v-if="isDashboardPage" />
+    <main :class="{ 'pt-16': isDashboardPage }">
       <router-view />
     </main>
     <ToastNotification />
@@ -18,11 +18,7 @@ import SessionWarning from "./components/common/SessionWarning.vue";
 
 const route = useRoute();
 
-const isAuthPage = computed(() => {
-  return route.name === "login" || route.name === "register";
-});
-
-const isHomePage = computed(() => {
-  return route.name === "home";
+const isDashboardPage = computed(() => {
+  return route.name === "dashboard" || route.name === "profile" || route.name === "admin";
 });
 </script>
